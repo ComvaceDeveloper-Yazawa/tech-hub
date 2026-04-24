@@ -3,9 +3,9 @@
 import { listBookmarksInputSchema } from '@/schemas/article';
 import { ListBookmarksUseCase } from '@/contexts/publishing/application/ListBookmarksUseCase';
 import { TenantId } from '@/contexts/shared-kernel/TenantId';
-import { UserId } from '@/contexts/shared-kernel/UserId';
 import { PrismaArticleBookmarkRepository } from '@/contexts/publishing/infrastructure/PrismaArticleBookmarkRepository';
 import { prisma } from '@/lib/prisma';
+import { getAuthUserId } from '@/lib/supabase/auth-helpers';
 
 export async function listBookmarks(input: {
   cursor?: string;
@@ -23,9 +23,12 @@ export async function listBookmarks(input: {
 }> {
   const validated = listBookmarksInputSchema.parse(input);
 
+  const userId = await getAuthUserId();
+  if (!userId) {
+    throw new Error('ログインが必要です');
+  }
+
   const tenantId = TenantId.personal();
-  // TODO: Get userId from Supabase Auth session
-  const userId = UserId.fromString('00000000000000000000000001');
 
   const bookmarkRepository = new PrismaArticleBookmarkRepository(prisma);
   const useCase = new ListBookmarksUseCase(bookmarkRepository);

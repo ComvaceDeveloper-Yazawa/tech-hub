@@ -20,6 +20,7 @@ describe('CreateArticleUseCase', () => {
   beforeEach(() => {
     mockRepository = {
       findById: vi.fn(),
+      findByIds: vi.fn(),
       findBySlug: vi.fn(),
       findPaginated: vi.fn(),
       save: vi.fn().mockResolvedValue(undefined),

@@ -48,6 +48,18 @@ export class PrismaArticleRepository implements IArticleRepository {
     return this.toDomain(row);
   }
 
+  async findByIds(ids: ArticleId[], tenantId: TenantId): Promise<Article[]> {
+    if (ids.length === 0) return [];
+    const rows = await this.prisma.article.findMany({
+      where: {
+        id: { in: ids.map((id) => id.toString()) },
+        tenantId: tenantId.toString(),
+      },
+      include: { tags: true },
+    });
+    return rows.map((row) => this.toDomain(row));
+  }
+
   async findBySlug(slug: Slug, tenantId: TenantId): Promise<Article | null> {
     const row = await this.prisma.article.findFirst({
       where: { slug: slug.toString(), tenantId: tenantId.toString() },

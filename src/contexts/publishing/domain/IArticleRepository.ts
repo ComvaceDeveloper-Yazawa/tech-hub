@@ -23,6 +23,7 @@ export interface ArticleSortOption {
 
 export interface IArticleRepository {
   findById(id: ArticleId, tenantId: TenantId): Promise<Article | null>;
+  findByIds(ids: ArticleId[], tenantId: TenantId): Promise<Article[]>;
   findBySlug(slug: Slug, tenantId: TenantId): Promise<Article | null>;
   findPaginated(
     tenantId: TenantId,

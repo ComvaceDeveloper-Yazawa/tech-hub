@@ -6,6 +6,8 @@ import rehypeRaw from 'rehype-raw';
 import { Eye, Calendar } from 'lucide-react';
 import { getArticleBySlug } from '@/presentation/actions/getArticleBySlug';
 import { recordView } from '@/presentation/actions/recordView';
+import { checkLikeStatus } from '@/presentation/actions/checkLikeStatus';
+import { checkBookmarkStatus } from '@/presentation/actions/checkBookmarkStatus';
 import { LikeButton } from '@/components/features/LikeButton';
 import { BookmarkButton } from '@/components/features/BookmarkButton';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +27,11 @@ export default async function ArticleDetailPage({
   }
 
   await recordView({ articleId: article.id });
+
+  const [likeStatus, bookmarkStatus] = await Promise.all([
+    checkLikeStatus({ articleId: article.id }),
+    checkBookmarkStatus({ articleId: article.id }),
+  ]);
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-8">
@@ -67,9 +74,12 @@ export default async function ArticleDetailPage({
         <LikeButton
           articleId={article.id}
           initialLikeCount={article.likeCount}
-          initialLiked={false}
+          initialLiked={likeStatus.liked}
         />
-        <BookmarkButton articleId={article.id} initialBookmarked={false} />
+        <BookmarkButton
+          articleId={article.id}
+          initialBookmarked={bookmarkStatus.bookmarked}
+        />
       </footer>
     </article>
   );

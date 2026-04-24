@@ -132,3 +132,27 @@ https://[your-app].vercel.app/api/health
 - **Hobby プラン制限**: 商用利用不可、10秒タイムアウト、月間100GB帯域
 - **Supabase Free プラン制限**: 500MB DB、1GB ストレージ、50,000 月間アクティブユーザー
 - `.env` ファイルは絶対に Git にコミットしない (`.gitignore` に含まれていることを確認)
+
+---
+
+## 4. Supabase Storage バケットの作成
+
+記事内の画像アップロード機能を使用するには、Supabase Dashboard で Storage バケットを手動作成する必要がある。
+
+### 4.1 バケット作成手順
+
+1. Supabase Dashboard → Storage → 「New bucket」
+2. バケット名: `article-images`
+3. Public bucket: **ON** (公開バケット)
+4. File size limit: `5MB`
+5. Allowed MIME types: `image/jpeg, image/png, image/gif, image/webp`
+
+### 4.2 RLS ポリシー設定
+
+バケット作成後、以下のポリシーを設定する:
+
+- **SELECT (読み取り)**: 全ユーザーに許可 (`true`)
+- **INSERT (アップロード)**: 認証済みユーザーのみ (`auth.role() = 'authenticated'`)
+- **DELETE (削除)**: 認証済みユーザーのみ (`auth.role() = 'authenticated'`)
+
+> **注意**: このバケットはプログラムから自動作成できないため、手動で作成する必要がある。
