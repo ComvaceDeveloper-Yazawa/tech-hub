@@ -1,7 +1,5 @@
-export default function HomePage() {
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-bold">Publishing Article</h1>
-    </main>
-  );
+import { redirect } from 'next/navigation';
+
+export default function TopPage() {
+  redirect('/articles');
 }
