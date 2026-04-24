@@ -9,6 +9,7 @@ export default defineConfig({
   },
   test: {
     exclude: ['tests/e2e/**', 'node_modules/**'],
+    fileParallelism: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

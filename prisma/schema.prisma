@@ -7,3 +7,70 @@ datasource db {
 generator client {
   provider = "prisma-client-js"
 }
+
+model Article {
+  id          String    @id @db.Char(26)
+  tenantId    String    @map("tenant_id") @db.Char(26)
+  title       String    @db.VarChar(100)
+  content     String    @db.Text
+  status      String    @default("draft") @db.VarChar(20)
+  slug        String    @db.VarChar(200)
+  authorId    String    @map("author_id") @db.Char(26)
+  viewCount   Int       @default(0) @map("view_count")
+  likeCount   Int       @default(0) @map("like_count")
+  publishedAt DateTime? @map("published_at") @db.Timestamptz()
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  tags      ArticleTag[]
+  likes     ArticleLike[]
+  bookmarks ArticleBookmark[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, authorId])
+  @@index([tenantId, status, publishedAt])
+  @@index([tenantId, status, viewCount])
+  @@index([tenantId, status, likeCount])
+  @@map("articles")
+}
+
+model ArticleTag {
+  articleId String   @map("article_id") @db.Char(26)
+  tagId     String   @map("tag_id") @db.Char(26)
+  tenantId  String   @map("tenant_id") @db.Char(26)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
+  @@index([tenantId, tagId])
+  @@map("article_tags")
+}
+
+model ArticleLike {
+  articleId String   @map("article_id") @db.Char(26)
+  userId    String   @map("user_id") @db.Char(26)
+  tenantId  String   @map("tenant_id") @db.Char(26)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, userId])
+  @@index([tenantId, articleId])
+  @@map("article_likes")
+}
+
+model ArticleBookmark {
+  articleId String   @map("article_id") @db.Char(26)
+  userId    String   @map("user_id") @db.Char(26)
+  tenantId  String   @map("tenant_id") @db.Char(26)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, userId])
+  @@index([tenantId, userId, createdAt])
+  @@map("article_bookmarks")
+}
