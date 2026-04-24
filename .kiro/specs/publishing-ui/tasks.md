@@ -1,0 +1,248 @@
+# 実装計画: Publishing UI — 記事公開プラットフォームのフロントエンド
+
+## 概要
+
+Publishing Context のバックエンド (Server Actions, ユースケース, ドメインモデル) は実装済み。本計画では Next.js 15+ App Router 上にフロントエンド UI を構築する。shadcn/ui + Tailwind CSS v4 でモバイルファーストのレスポンシブデザインを実現し、公開ページ・管理ページ・共通コンポーネントを段階的に実装する。
+
+## Tasks
+
+- [x] 1. 依存パッケージのインストールと shadcn/ui セットアップ
+  - [x] 1.1 shadcn/ui の初期化と必要コンポーネントの追加
+    - `npx shadcn@latest init` を実行し shadcn/ui を初期化
+    - 以下のコンポーネントを追加: button, input, textarea, label, badge, card, select, table, dialog, sheet, sonner, tabs
+    - `src/components/ui/` 配下に配置されることを確認
+    - _要件: 13.6, 16.1_
+  - [x] 1.2 追加 npm パッケージのインストール
+    - `@uiw/react-md-editor` (マークダウンエディタ)
+    - `react-markdown` (マークダウンレンダリング)
+    - `remark-gfm` (GFM サポート)
+    - `rehype-raw` (HTML タグ許可)
+    - _要件: 5.3, 13.7_
+
+- [ ] 2. 不足している Server Actions の追加
+  - [ ] 2.1 `getArticleBySlug` Server Action を実装
+    - `src/presentation/actions/getArticleBySlug.ts` を作成
+    - slug ベースで公開記事を1件取得し、記事データ (id, title, slug, content, status, viewCount, likeCount, publishedAt, createdAt, updatedAt, tagIds) を返す
+    - 記事が見つからない場合は `null` を返す
+    - Zod スキーマでバリデーション
+    - _要件: 5.1, 5.2_
+  - [ ] 2.2 `getArticleById` Server Action を実装
+    - `src/presentation/actions/getArticleById.ts` を作成
+    - ID ベースで記事を1件取得 (ステータス問わず)
+    - 記事が見つからない場合は `null` を返す
+    - _要件: 12.1, 12.5_
+  - [ ] 2.3 `uploadImage` Server Action を実装
+    - `src/presentation/actions/uploadImage.ts` を作成
+    - FormData から画像ファイルを受け取り、Supabase Storage (`article-images` バケット) にアップロード
+    - パス構造: `{tenantId}/{articleId}/{ulid}.{ext}`
+    - 対応形式: JPEG, PNG, GIF, WebP / 最大 5MB
+    - 公開 URL を返す
+    - _要件: 13.9, 13.10_
+
+- [ ] 3. チェックポイント — Server Actions の動作確認
+  - すべてのテストが通ることを確認し、質問があればユーザーに確認する。
+
+- [ ] 4. 共通コンポーネントの実装
+  - [ ] 4.1 ArticleCard コンポーネントを実装
+    - `src/components/features/ArticleCard.tsx` (Server Component)
+    - 記事タイトル (詳細ページへのリンク)、公開日時、閲覧数、いいね数を表示
+    - cn() ヘルパーで className カスタマイズ対応
+    - shadcn/ui の Card をベースに使用
+    - _要件: 6.1, 6.2, 6.3, 6.4_
+  - [ ]\* 4.2 ArticleCard の単体テストを作成
+    - レンダリング内容の検証 (タイトル、日時、カウント表示)
+    - リンク先 URL の検証
+    - _要件: 6.1, 6.2_
+  - [ ] 4.3 Pagination コンポーネントを実装
+    - `src/components/features/Pagination.tsx` ('use client')
+    - nextCursor, prevCursor, hasNextPage, hasPrevPage を受け取り前後ボタンを表示
+    - ボタンクリックでクエリパラメータ (cursor) を更新
+    - hasNextPage/hasPrevPage が false のとき対応ボタンを disabled
+    - _要件: 7.1, 7.2, 7.3, 7.4, 7.5_
+  - [ ]\* 4.4 Pagination の単体テストを作成
+    - ボタンの disabled 状態の検証
+    - クエリパラメータ更新の検証
+    - _要件: 7.2, 7.3, 7.5_
+  - [ ] 4.5 LikeButton コンポーネントを実装
+    - `src/components/features/LikeButton.tsx` ('use client')
+    - toggleLike Server Action を呼び出し、楽観的更新でいいね数とアイコン状態を切り替え
+    - ローディング中はボタンを disabled
+    - エラー時は Sonner トースト通知
+    - _要件: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6_
+  - [ ]\* 4.6 LikeButton の単体テストを作成
+    - いいね済み/未いいね状態の表示検証
+    - クリック時の楽観的更新検証
+    - ローディング状態の検証
+    - _要件: 8.3, 8.4, 8.6_
+  - [ ] 4.7 BookmarkButton コンポーネントを実装
+    - `src/components/features/BookmarkButton.tsx` ('use client')
+    - toggleBookmark Server Action を呼び出し、楽観的更新でアイコン状態を切り替え
+    - ローディング中はボタンを disabled
+    - エラー時は Sonner トースト通知
+    - _要件: 9.1, 9.2, 9.3, 9.4, 9.5_
+  - [ ]\* 4.8 BookmarkButton の単体テストを作成
+    - ブックマーク済み/未ブックマーク状態の表示検証
+    - クリック時の楽観的更新検証
+    - ローディング状態の検証
+    - _要件: 9.2, 9.3, 9.5_
+  - [ ] 4.9 SortSelector コンポーネントを実装
+    - `src/components/features/SortSelector.tsx` ('use client')
+    - 公開日時・閲覧数・いいね数のソート選択
+    - 選択時にクエリパラメータ (sort, dir) を更新
+    - shadcn/ui の Select を使用
+    - _要件: 3.3_
+  - [ ] 4.10 TagFilter コンポーネントを実装
+    - `src/components/features/TagFilter.tsx` ('use client')
+    - タグ選択でクエリパラメータ (tagId) を更新
+    - フィルタ適用中はフィルタ解除ボタンを表示
+    - _要件: 4.1, 4.2, 4.3_
+  - [ ] 4.11 PublishButton コンポーネントを実装
+    - `src/components/features/PublishButton.tsx` ('use client')
+    - currentStatus に応じて publishArticle / unpublishArticle Server Action を呼び出し
+    - ローディング中はボタンを disabled
+    - 成功時は revalidatePath で一覧を更新、エラー時はトースト通知
+    - _要件: 14.1, 14.2, 14.4, 14.5, 14.6_
+  - [ ] 4.12 DeleteButton コンポーネントを実装
+    - `src/components/features/DeleteButton.tsx` ('use client')
+    - shadcn/ui の Dialog で確認ダイアログを表示
+    - 確認後に deleteArticle Server Action を呼び出し
+    - ローディング中はボタンを disabled
+    - 成功時は revalidatePath で一覧を更新、エラー時はトースト通知
+    - _要件: 14.3, 14.4, 14.5, 14.6_
+
+- [ ] 5. チェックポイント — 共通コンポーネントの確認
+  - すべてのテストが通ることを確認し、質問があればユーザーに確認する。
+
+- [ ] 6. レイアウトの実装
+  - [ ] 6.1 Header コンポーネントを実装
+    - `src/components/features/Header.tsx` (Server Component)
+    - サイトロゴ (トップページリンク)、記事一覧リンク
+    - 認証済み: ブックマーク一覧リンク + 管理ページリンク
+    - 未認証: ログインリンク
+    - Supabase Auth でユーザー情報を取得
+    - _要件: 1.2, 1.3, 1.4_
+  - [ ] 6.2 MobileNav コンポーネントを実装
+    - `src/components/features/MobileNav.tsx` ('use client')
+    - md 未満でハンバーガーメニュー表示、shadcn/ui の Sheet でドロワーナビゲーション
+    - _要件: 1.5_
+  - [ ] 6.3 Footer コンポーネントを実装
+    - `src/components/features/Footer.tsx` (Server Component)
+    - コピーライト表記
+    - _要件: 1.6_
+  - [ ] 6.4 PublicLayout を実装
+    - `app/(public)/layout.tsx` に Header + Footer を配置
+    - _要件: 1.1_
+  - [ ] 6.5 AdminSidebar コンポーネントを実装
+    - `src/components/features/AdminSidebar.tsx` (Server Component)
+    - 記事管理一覧リンク、新規記事作成リンク
+    - 現在のページに対応するリンクをアクティブ状態で表示
+    - md 以上で左固定 (w-64)
+    - _要件: 2.2, 2.3, 2.5_
+  - [ ] 6.6 AdminMobileSidebar コンポーネントを実装
+    - `src/components/features/AdminMobileSidebar.tsx` ('use client')
+    - md 未満でハンバーガーメニューからドロワー表示 (shadcn/ui Sheet)
+    - _要件: 2.4_
+  - [ ] 6.7 AdminLayout を実装
+    - `app/(admin)/layout.tsx` に Header + AdminSidebar + AdminMobileSidebar を配置
+    - 未認証ユーザーはログインページにリダイレクト
+    - _要件: 2.1, 2.6_
+
+- [ ] 7. チェックポイント — レイアウトの確認
+  - すべてのテストが通ることを確認し、質問があればユーザーに確認する。
+
+- [ ] 8. 公開ページの実装
+  - [ ] 8.1 公開記事一覧ページを実装
+    - `app/(public)/articles/page.tsx` (Server Component)
+    - listArticles を status=published で呼び出し
+    - SortSelector, TagFilter, ArticleCard, Pagination を配置
+    - デフォルトソート: publishedAt 降順
+    - URL クエリパラメータ (cursor, sort, dir, tagId) を searchParams から取得
+    - レスポンシブグリッド: 1カラム → md:2カラム → lg:3カラム
+    - _要件: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 4.1, 4.2, 4.3_
+  - [ ] 8.2 記事詳細ページを実装
+    - `app/(public)/articles/[slug]/page.tsx` (Server Component)
+    - getArticleBySlug で記事取得、見つからない場合は notFound()
+    - タイトル、公開日時、閲覧数、いいね数、タグ (リンク付き) を表示
+    - 本文を react-markdown + remark-gfm + rehype-raw でレンダリング、prose クラスでスタイリング
+    - recordView Server Action を呼び出して閲覧数を記録
+    - LikeButton, BookmarkButton を配置
+    - _要件: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7_
+  - [ ] 8.3 ブックマーク一覧ページを実装
+    - `app/(public)/bookmarks/page.tsx` (Server Component)
+    - 未認証ユーザーはログインページにリダイレクト
+    - listBookmarks で取得し、各記事を ArticleCard で表示
+    - ブックマーク 0 件時は空メッセージ + 記事一覧リンクを表示
+    - Pagination を配置
+    - _要件: 15.1, 15.2, 15.3, 15.4, 15.5_
+  - [ ] 8.4 トップページを更新
+    - `app/(public)/page.tsx` を記事一覧ページへのリダイレクトまたはランディングページとして更新
+    - _要件: 3.1_
+
+- [ ] 9. 管理ページの実装
+  - [ ] 9.1 管理記事一覧ページを実装
+    - `app/(admin)/articles/page.tsx` (Server Component)
+    - listArticles をステータスフィルタなしで呼び出し、全記事をテーブル表示
+    - 各行: タイトル、ステータス (Badge)、公開日時、閲覧数、いいね数、作成日時
+    - 各行に編集リンク、PublishButton、DeleteButton を配置
+    - ステータスフィルタ (Tabs) と Pagination を配置
+    - 新規記事作成ボタンを表示
+    - sm 未満ではテーブルを横スクロール可能なコンテナで表示
+    - _要件: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7_
+  - [ ] 9.2 ArticleForm コンポーネントを実装
+    - `src/components/features/ArticleForm.tsx` ('use client')
+    - タイトル (Input, 最大100文字)、本文 (@uiw/react-md-editor)、スラッグ (Input)、タグ入力
+    - 作成モード / 編集モード対応 (defaultValues で初期値設定)
+    - Zod スキーマでクライアントサイドバリデーション、フィールド単位エラー表示
+    - 送信中はボタン disabled + ローディング表示
+    - 画像ドラッグ&ドロップ / ボタンクリックで Supabase Storage にアップロード → `![alt](url)` 挿入
+    - 画像制限: JPEG, PNG, GIF, WebP / 最大 5MB
+    - shadcn/ui の Input, Button, Label を使用
+    - _要件: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8, 13.9, 13.10_
+  - [ ]\* 9.3 ArticleForm の単体テストを作成
+    - 作成モード / 編集モードのレンダリング検証
+    - バリデーションエラー表示の検証
+    - 送信ボタンの disabled 状態検証
+    - _要件: 13.2, 13.3, 13.5_
+  - [ ] 9.4 記事作成ページを実装
+    - `app/(admin)/articles/new/page.tsx` (Server Component)
+    - ArticleForm を mode='create' で配置
+    - createArticle Server Action を呼び出し、成功時は管理記事一覧にリダイレクト
+    - エラー時はフォーム上部にエラーメッセージ表示
+    - _要件: 11.1, 11.2, 11.3, 11.4_
+  - [ ] 9.5 記事編集ページを実装
+    - `app/(admin)/articles/[id]/edit/page.tsx` (Server Component)
+    - getArticleById で既存データ取得、見つからない場合は notFound()
+    - ArticleForm を mode='edit' + defaultValues で配置
+    - updateArticle Server Action を呼び出し、成功時は管理記事一覧にリダイレクト
+    - エラー時はフォーム上部にエラーメッセージ表示
+    - _要件: 12.1, 12.2, 12.3, 12.4, 12.5_
+
+- [ ] 10. チェックポイント — 全ページの動作確認
+  - すべてのテストが通ることを確認し、質問があればユーザーに確認する。
+
+- [ ] 11. エラーハンドリングとアクセシビリティの仕上げ
+  - [ ] 11.1 エラーハンドリング UI を整備
+    - フォームのバリデーションエラー: フィールド下にインラインエラーメッセージ (role="alert")
+    - ビジネスロジックエラー: Sonner トースト通知
+    - ネットワークエラー: 「通信エラーが発生しました。再度お試しください」トースト
+    - 404 ページ: notFound() による Next.js デフォルト 404
+    - _要件: 18.1, 18.2, 18.3, 18.4_
+  - [ ] 11.2 アクセシビリティ対応を確認・修正
+    - すべてのインタラクティブ要素にキーボード操作 + focus-visible:ring-2 を適用
+    - すべてのボタン/リンクに aria-label または可視テキストを設定
+    - すべてのフォーム入力に label を関連付け
+    - 適切な見出し階層 (h1 → h2 → h3) を使用
+    - ステータス変更通知に aria-live="polite" を使用
+    - タップターゲット最小 44x44px を確保
+    - _要件: 17.1, 17.2, 17.3, 17.4, 17.5, 16.2, 16.3_
+
+- [ ] 12. 最終チェックポイント — 全テスト通過確認
+  - すべてのテストが通ることを確認し、質問があればユーザーに確認する。
+
+## Notes
+
+- タスクに `*` が付いているものはオプション (単体テスト) であり、スキップ可能
+- PBT (Property-Based Testing) は UI 機能のため適用しない
+- E2E テスト (Playwright) は GitHub Actions でのみ実行するため、本タスクリストには含めない
+- 各タスクは要件番号で追跡可能
+- Server Actions (createArticle, updateArticle, publishArticle, unpublishArticle, deleteArticle, recordView, toggleLike, toggleBookmark, listArticles, listBookmarks) は実装済み
