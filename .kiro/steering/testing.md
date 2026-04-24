@@ -53,51 +53,51 @@
 
 ```typescript
 // src/contexts/publishing/domain/article/ArticleTitle.test.ts
-import { describe, it, expect } from "vitest";
-import { ArticleTitle } from "./ArticleTitle";
+import { describe, it, expect } from 'vitest';
+import { ArticleTitle } from './ArticleTitle';
 
-describe("ArticleTitle", () => {
-  describe("正常系", () => {
-    it("有効なタイトルで値オブジェクトを作成できる", () => {
-      const title = ArticleTitle.fromString("技術ブログ記事");
-      expect(title.toString()).toBe("技術ブログ記事");
+describe('ArticleTitle', () => {
+  describe('正常系', () => {
+    it('有効なタイトルで値オブジェクトを作成できる', () => {
+      const title = ArticleTitle.fromString('技術ブログ記事');
+      expect(title.toString()).toBe('技術ブログ記事');
     });
   });
 
-  describe("異常系", () => {
-    it("空文字の場合、エラーを投げる", () => {
-      expect(() => ArticleTitle.fromString("")).toThrow("タイトルは必須です");
+  describe('異常系', () => {
+    it('空文字の場合、エラーを投げる', () => {
+      expect(() => ArticleTitle.fromString('')).toThrow('タイトルは必須です');
     });
 
-    it("101文字以上の場合、エラーを投げる", () => {
-      const longTitle = "a".repeat(101);
+    it('101文字以上の場合、エラーを投げる', () => {
+      const longTitle = 'a'.repeat(101);
       expect(() => ArticleTitle.fromString(longTitle)).toThrow(
-        "タイトルは100文字以内です",
+        'タイトルは100文字以内です'
       );
     });
   });
 
-  describe("等価性", () => {
-    it("同じ値の場合、等価と判定される", () => {
-      const title1 = ArticleTitle.fromString("タイトル");
-      const title2 = ArticleTitle.fromString("タイトル");
+  describe('等価性', () => {
+    it('同じ値の場合、等価と判定される', () => {
+      const title1 = ArticleTitle.fromString('タイトル');
+      const title2 = ArticleTitle.fromString('タイトル');
       expect(title1.equals(title2)).toBe(true);
     });
 
-    it("異なる値の場合、非等価と判定される", () => {
-      const title1 = ArticleTitle.fromString("タイトル1");
-      const title2 = ArticleTitle.fromString("タイトル2");
+    it('異なる値の場合、非等価と判定される', () => {
+      const title1 = ArticleTitle.fromString('タイトル1');
+      const title2 = ArticleTitle.fromString('タイトル2');
       expect(title1.equals(title2)).toBe(false);
     });
   });
 
-  describe("不変性", () => {
-    it("値を変更しようとすると新しいインスタンスが返される", () => {
-      const original = ArticleTitle.fromString("元のタイトル");
-      const modified = original.changePrefix("[更新] ");
+  describe('不変性', () => {
+    it('値を変更しようとすると新しいインスタンスが返される', () => {
+      const original = ArticleTitle.fromString('元のタイトル');
+      const modified = original.changePrefix('[更新] ');
 
-      expect(original.toString()).toBe("元のタイトル");
-      expect(modified.toString()).toBe("[更新] 元のタイトル");
+      expect(original.toString()).toBe('元のタイトル');
+      expect(modified.toString()).toBe('[更新] 元のタイトル');
       expect(original).not.toBe(modified);
     });
   });
@@ -108,21 +108,21 @@ describe("ArticleTitle", () => {
 
 ```typescript
 // src/contexts/publishing/domain/article/Article.test.ts
-import { describe, it, expect } from "vitest";
-import { Article } from "./Article";
-import { ArticleId } from "./ArticleId";
-import { ArticleTitle } from "./ArticleTitle";
-import { ArticleContent } from "./ArticleContent";
-import { TenantId } from "@/contexts/shared-kernel/TenantId";
+import { describe, it, expect } from 'vitest';
+import { Article } from './Article';
+import { ArticleId } from './ArticleId';
+import { ArticleTitle } from './ArticleTitle';
+import { ArticleContent } from './ArticleContent';
+import { TenantId } from '@/contexts/shared-kernel/TenantId';
 
-describe("Article", () => {
-  describe("記事の作成", () => {
-    it("下書き状態で記事を作成できる", () => {
+describe('Article', () => {
+  describe('記事の作成', () => {
+    it('下書き状態で記事を作成できる', () => {
       const article = Article.create(
         ArticleId.generate(),
         TenantId.personal(),
-        ArticleTitle.fromString("タイトル"),
-        ArticleContent.fromString("本文"),
+        ArticleTitle.fromString('タイトル'),
+        ArticleContent.fromString('本文')
       );
 
       expect(article.isDraft()).toBe(true);
@@ -130,13 +130,13 @@ describe("Article", () => {
     });
   });
 
-  describe("記事の公開", () => {
-    it("下書き記事を公開できる", () => {
+  describe('記事の公開', () => {
+    it('下書き記事を公開できる', () => {
       const article = Article.create(
         ArticleId.generate(),
         TenantId.personal(),
-        ArticleTitle.fromString("タイトル"),
-        ArticleContent.fromString("本文"),
+        ArticleTitle.fromString('タイトル'),
+        ArticleContent.fromString('本文')
       );
 
       article.publish();
@@ -146,38 +146,38 @@ describe("Article", () => {
       expect(article.getDomainEvents()[0]).toBeInstanceOf(ArticlePublished);
     });
 
-    it("タイトルが空の場合、公開できない", () => {
+    it('タイトルが空の場合、公開できない', () => {
       const article = Article.create(
         ArticleId.generate(),
         TenantId.personal(),
-        ArticleTitle.fromString(""), // 実際は値オブジェクトでエラー
-        ArticleContent.fromString("本文"),
+        ArticleTitle.fromString(''), // 実際は値オブジェクトでエラー
+        ArticleContent.fromString('本文')
       );
 
-      expect(() => article.publish()).toThrow("公開条件を満たしていません");
+      expect(() => article.publish()).toThrow('公開条件を満たしていません');
     });
 
-    it("既に公開済みの記事は再公開できない", () => {
+    it('既に公開済みの記事は再公開できない', () => {
       const article = Article.create(
         ArticleId.generate(),
         TenantId.personal(),
-        ArticleTitle.fromString("タイトル"),
-        ArticleContent.fromString("本文"),
+        ArticleTitle.fromString('タイトル'),
+        ArticleContent.fromString('本文')
       );
 
       article.publish();
 
-      expect(() => article.publish()).toThrow("既に公開済みです");
+      expect(() => article.publish()).toThrow('既に公開済みです');
     });
   });
 
-  describe("ドメインイベント", () => {
-    it("公開時に ArticlePublished イベントが発行される", () => {
+  describe('ドメインイベント', () => {
+    it('公開時に ArticlePublished イベントが発行される', () => {
       const article = Article.create(
         ArticleId.generate(),
         TenantId.personal(),
-        ArticleTitle.fromString("タイトル"),
-        ArticleContent.fromString("本文"),
+        ArticleTitle.fromString('タイトル'),
+        ArticleContent.fromString('本文')
       );
 
       article.publish();
@@ -187,12 +187,12 @@ describe("Article", () => {
       expect(events[0]).toBeInstanceOf(ArticlePublished);
     });
 
-    it("イベントをクリアできる", () => {
+    it('イベントをクリアできる', () => {
       const article = Article.create(
         ArticleId.generate(),
         TenantId.personal(),
-        ArticleTitle.fromString("タイトル"),
-        ArticleContent.fromString("本文"),
+        ArticleTitle.fromString('タイトル'),
+        ArticleContent.fromString('本文')
       );
 
       article.publish();
@@ -212,6 +212,24 @@ describe("Article", () => {
 2. **不変性テスト**: 値を変更しても元のインスタンスが変わらないことを確認
 3. **バリデーションテスト**: 不正な値でエラーが投げられることを確認
 
+## インポートルール
+
+### テストファイルでは `@/` エイリアスを使用
+
+**理由**: `moduleResolution: "bundler"` 環境で相対インポート (`./`) が IDE の TypeScript サーバーで解決できない場合がある
+
+**OK例**:
+
+```typescript
+import { ArticleTitle } from '@/contexts/publishing/domain/article/ArticleTitle';
+```
+
+**NG例**:
+
+```typescript
+import { ArticleTitle } from './ArticleTitle'; // IDE でエラーになる場合がある
+```
+
 ## 集約の必須テスト
 
 すべての集約に以下のテストを必ず含める:
@@ -229,13 +247,13 @@ describe("Article", () => {
 **OK例**:
 
 ```typescript
-describe("Article", () => {
-  describe("記事の公開", () => {
-    it("下書き記事を公開できる", () => {
+describe('Article', () => {
+  describe('記事の公開', () => {
+    it('下書き記事を公開できる', () => {
       // ...
     });
 
-    it("タイトルが空の場合、公開できない", () => {
+    it('タイトルが空の場合、公開できない', () => {
       // ...
     });
   });
@@ -245,13 +263,13 @@ describe("Article", () => {
 **NG例**:
 
 ```typescript
-describe("Article", () => {
-  it("test publish", () => {
+describe('Article', () => {
+  it('test publish', () => {
     // NG: 英語、曖昧
     // ...
   });
 
-  it("should work", () => {
+  it('should work', () => {
     // NG: 何をテストしているか不明
     // ...
   });
@@ -273,13 +291,13 @@ describe("Article", () => {
 ### 構造
 
 ```typescript
-it("下書き記事を公開できる", () => {
+it('下書き記事を公開できる', () => {
   // Arrange: テストデータの準備
   const article = Article.create(
     ArticleId.generate(),
     TenantId.personal(),
-    ArticleTitle.fromString("タイトル"),
-    ArticleContent.fromString("本文"),
+    ArticleTitle.fromString('タイトル'),
+    ArticleContent.fromString('本文')
   );
 
   // Act: テスト対象の実行
@@ -313,7 +331,7 @@ it("下書き記事を公開できる", () => {
 **OK例**:
 
 ```typescript
-it("記事を公開できる", () => {
+it('記事を公開できる', () => {
   const article = Article.create(/* ... */);
   article.publish();
   expect(article.isPublished()).toBe(true);
@@ -324,7 +342,7 @@ it("記事を公開できる", () => {
 
 ```typescript
 // ❌ domain 層でモックを使用
-it("記事を公開できる", () => {
+it('記事を公開できる', () => {
   const mockTitle = vi.fn(); // NG!
   const article = new Article(mockTitle);
   // ...
@@ -337,12 +355,12 @@ it("記事を公開できる", () => {
 
 ```typescript
 // src/contexts/publishing/application/PublishArticleUseCase.test.ts
-import { describe, it, expect, vi } from "vitest";
-import { PublishArticleUseCase } from "./PublishArticleUseCase";
-import { IArticleRepository } from "../domain/IArticleRepository";
+import { describe, it, expect, vi } from 'vitest';
+import { PublishArticleUseCase } from './PublishArticleUseCase';
+import { IArticleRepository } from '../domain/IArticleRepository';
 
-describe("PublishArticleUseCase", () => {
-  it("記事を公開し、リポジトリに保存する", async () => {
+describe('PublishArticleUseCase', () => {
+  it('記事を公開し、リポジトリに保存する', async () => {
     // Arrange
     const article = Article.create(/* ... */);
     const mockRepository: IArticleRepository = {
@@ -371,11 +389,11 @@ describe("PublishArticleUseCase", () => {
 
 ```typescript
 // src/contexts/publishing/infrastructure/PrismaArticleRepository.integration.test.ts
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { PrismaClient } from "@prisma/client";
-import { PrismaArticleRepository } from "./PrismaArticleRepository";
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { PrismaClient } from '@prisma/client';
+import { PrismaArticleRepository } from './PrismaArticleRepository';
 
-describe("PrismaArticleRepository (統合テスト)", () => {
+describe('PrismaArticleRepository (統合テスト)', () => {
   let prisma: PrismaClient;
   let repository: PrismaArticleRepository;
 
@@ -389,7 +407,7 @@ describe("PrismaArticleRepository (統合テスト)", () => {
     await prisma.$disconnect();
   });
 
-  it("記事を保存し、取得できる", async () => {
+  it('記事を保存し、取得できる', async () => {
     // Arrange
     const article = Article.create(/* ... */);
 
@@ -450,16 +468,16 @@ npm run test:coverage
 export default defineConfig({
   test: {
     coverage: {
-      provider: "v8",
-      reporter: ["text", "json", "html"],
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
       thresholds: {
-        "src/contexts/**/domain/**": {
+        'src/contexts/**/domain/**': {
           lines: 95,
           functions: 95,
           branches: 95,
           statements: 95,
         },
-        "src/contexts/**/application/**": {
+        'src/contexts/**/application/**': {
           lines: 85,
           functions: 85,
           branches: 85,
@@ -486,30 +504,30 @@ export default defineConfig({
 ### playwright.config.ts
 
 ```typescript
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: "./tests/e2e",
+  testDir: './tests/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: "html",
+  reporter: 'html',
   use: {
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || "http://localhost:3000",
-    trace: "on-first-retry",
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000',
+    trace: 'on-first-retry',
   },
   projects: [
     {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
   webServer: process.env.CI
     ? undefined
     : {
-        command: "npm run dev",
-        url: "http://localhost:3000",
+        command: 'npm run dev',
+        url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
       },
 });
@@ -519,29 +537,29 @@ export default defineConfig({
 
 ```typescript
 // tests/e2e/article-publish.spec.ts
-import { test, expect } from "@playwright/test";
+import { test, expect } from '@playwright/test';
 
-test.describe("記事の公開", () => {
-  test("下書き記事を公開できる", async ({ page }) => {
+test.describe('記事の公開', () => {
+  test('下書き記事を公開できる', async ({ page }) => {
     // ログイン
-    await page.goto("/login");
-    await page.fill('input[name="email"]', "test@example.com");
-    await page.fill('input[name="password"]', "password");
+    await page.goto('/login');
+    await page.fill('input[name="email"]', 'test@example.com');
+    await page.fill('input[name="password"]', 'password');
     await page.click('button[type="submit"]');
 
     // 記事作成
-    await page.goto("/admin/articles/new");
-    await page.fill('input[name="title"]', "テスト記事");
-    await page.fill('textarea[name="content"]', "本文");
+    await page.goto('/admin/articles/new');
+    await page.fill('input[name="title"]', 'テスト記事');
+    await page.fill('textarea[name="content"]', '本文');
     await page.click('button:has-text("下書き保存")');
 
     // 公開
     await page.click('button:has-text("公開")');
-    await expect(page.locator("text=公開しました")).toBeVisible();
+    await expect(page.locator('text=公開しました')).toBeVisible();
 
     // 公開ページで確認
-    await page.goto("/articles");
-    await expect(page.locator("text=テスト記事")).toBeVisible();
+    await page.goto('/articles');
+    await expect(page.locator('text=テスト記事')).toBeVisible();
   });
 });
 ```
@@ -562,7 +580,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: '20'
 
       - name: Install dependencies
         run: npm ci
