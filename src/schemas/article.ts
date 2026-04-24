@@ -65,3 +65,11 @@ export const listBookmarksInputSchema = z.object({
   cursor: ulidSchema.optional(),
   limit: z.number().int().min(1).max(50).default(20),
 });
+
+export const getArticleBySlugInputSchema = z.object({
+  slug: slugSchema,
+});
+
+export const getArticleByIdInputSchema = z.object({
+  articleId: ulidSchema,
+});
