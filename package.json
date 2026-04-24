@@ -25,7 +25,8 @@
     "prisma": "^6.19.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "tailwind-merge": "^3.5.0"
+    "tailwind-merge": "^3.5.0",
+    "ulid": "^3.0.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
