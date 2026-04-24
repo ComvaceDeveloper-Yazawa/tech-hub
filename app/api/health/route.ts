@@ -3,14 +3,12 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   let dbStatus: 'connected' | 'disconnected' = 'disconnected';
-  let dbError: string | null = null;
-  const hasDbUrl = !!process.env.DATABASE_URL;
 
   try {
     await prisma.$queryRaw`SELECT 1`;
     dbStatus = 'connected';
-  } catch (e) {
-    dbError = e instanceof Error ? e.message : String(e);
+  } catch {
+    // DB credentials may not be available
   }
 
   return NextResponse.json(
@@ -18,8 +16,6 @@ export async function GET() {
       status: 'ok',
       timestamp: new Date().toISOString(),
       db: dbStatus,
-      dbError,
-      hasDbUrl,
     },
     { status: 200 }
   );
