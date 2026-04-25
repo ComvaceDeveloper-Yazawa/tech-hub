@@ -1,30 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model Article {
-  id          String    @id @db.Char(26)
-  tenantId    String    @map("tenant_id") @db.Char(26)
-  title       String    @db.VarChar(100)
-  content     String    @db.Text
-  status      String    @default("draft") @db.VarChar(20)
-  slug        String    @db.VarChar(200)
-  authorId    String    @map("author_id") @db.Char(26)
-  viewCount   Int       @default(0) @map("view_count")
-  likeCount   Int       @default(0) @map("like_count")
-  publishedAt DateTime? @map("published_at") @db.Timestamptz()
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
-
-  tags      ArticleTag[]
-  likes     ArticleLike[]
-  bookmarks ArticleBookmark[]
+  id          String            @id @db.Char(26)
+  tenantId    String            @map("tenant_id") @db.Char(26)
+  title       String            @db.VarChar(100)
+  content     String
+  status      String            @default("draft") @db.VarChar(20)
+  slug        String            @db.VarChar(200)
+  authorId    String            @map("author_id") @db.Char(26)
+  viewCount   Int               @default(0) @map("view_count")
+  likeCount   Int               @default(0) @map("like_count")
+  publishedAt DateTime?         @map("published_at") @db.Timestamptz(6)
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  bookmarks   ArticleBookmark[]
+  likes       ArticleLike[]
+  tags        ArticleTag[]
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -41,7 +40,7 @@ model Tag {
   tenantId       String   @map("tenant_id") @db.Char(26)
   name           String   @db.VarChar(50)
   normalizedName String   @map("normalized_name") @db.VarChar(50)
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@unique([tenantId, normalizedName])
   @@index([tenantId])
@@ -52,9 +51,8 @@ model ArticleTag {
   articleId String   @map("article_id") @db.Char(26)
   tagId     String   @map("tag_id") @db.Char(26)
   tenantId  String   @map("tenant_id") @db.Char(26)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
-
-  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@id([articleId, tagId])
   @@index([tenantId, tagId])
@@ -65,9 +63,8 @@ model ArticleLike {
   articleId String   @map("article_id") @db.Char(26)
   userId    String   @map("user_id") @db.Char(26)
   tenantId  String   @map("tenant_id") @db.Char(26)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
-
-  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@id([articleId, userId])
   @@index([tenantId, articleId])
@@ -78,9 +75,8 @@ model ArticleBookmark {
   articleId String   @map("article_id") @db.Char(26)
   userId    String   @map("user_id") @db.Char(26)
   tenantId  String   @map("tenant_id") @db.Char(26)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
-
-  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@id([articleId, userId])
   @@index([tenantId, userId, createdAt])
