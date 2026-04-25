@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -16,6 +16,8 @@ import { SplitPreview } from '@/components/editor/SplitPreview';
 import { slashCommandExtension } from '@/components/editor/slashCommands';
 import { createImageHandlers } from '@/components/editor/imageHandlers';
 import { createFormatOnPasteHandler } from '@/components/editor/formatOnPasteHandler';
+import { useAutoSave } from '@/components/editor/useAutoSave';
+import { DraftRestoreDialog } from '@/components/editor/DraftRestoreDialog';
 import { toast } from 'sonner';
 import { EditorState } from '@codemirror/state';
 import type { ReactCodeMirrorRef } from '@uiw/react-codemirror';
@@ -36,6 +38,7 @@ interface RichMarkdownEditorProps {
   onChange: (value: string) => void;
   onDrop?: (e: React.DragEvent) => void;
   height?: number;
+  articleId: string;
 }
 
 const editorTheme = EditorView.theme({
@@ -149,9 +152,29 @@ export function RichMarkdownEditor({
   onChange,
   onDrop,
   height = 500,
+  articleId,
 }: RichMarkdownEditorProps) {
   const [activeTab, setActiveTab] = useState<Tab>('edit');
   const editorRef = useRef<ReactCodeMirrorRef>(null);
+
+  // 自動保存
+  const {
+    status,
+    lastSavedAt,
+    hasDraft,
+    restoreDraft,
+    discardDraft,
+    savedContent,
+  } = useAutoSave(articleId, value);
+  const [showRestoreDialog, setShowRestoreDialog] = useState(false);
+
+  useEffect(() => {
+    if (hasDraft && savedContent && savedContent !== value) {
+      setShowRestoreDialog(true);
+    }
+    // valueは依存配列に入れない（初回のみ評価）
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasDraft, savedContent]);
 
   const extensions = [
     markdown({ base: markdownLanguage, codeLanguages: languages }),
@@ -184,6 +207,21 @@ export function RichMarkdownEditor({
       onDrop={activeTab === 'edit' ? onDrop : undefined}
       onDragOver={(e) => e.preventDefault()}
     >
+      <DraftRestoreDialog
+        open={showRestoreDialog}
+        savedAt={lastSavedAt}
+        preview={(savedContent ?? '').slice(0, 100)}
+        onRestore={() => {
+          const draft = restoreDraft();
+          if (draft) onChange(draft);
+          setShowRestoreDialog(false);
+        }}
+        onDiscard={() => {
+          discardDraft();
+          setShowRestoreDialog(false);
+        }}
+        onCancel={() => setShowRestoreDialog(false)}
+      />
       {/* ヘッダー */}
       <div className="flex items-center border-b border-[#3e4451] bg-[#21252b]">
         {/* 信号機 */}
@@ -212,6 +250,22 @@ export function RichMarkdownEditor({
         </div>
 
         <div className="ml-auto flex items-center gap-3 px-4 text-xs text-[#5c6370]">
+          {/* 保存ステータス */}
+          {status === 'saving' && (
+            <span className="text-[#5c6370]">💾 保存中...</span>
+          )}
+          {status === 'saved' && lastSavedAt && (
+            <span className="text-[#98c379]">
+              ✅ 保存済{' '}
+              {lastSavedAt.toLocaleTimeString('ja-JP', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
+          )}
+          {status === 'error' && (
+            <span className="text-[#e06c75]">⚠️ 保存失敗</span>
+          )}
           <span>{value.split('\n').length} 行</span>
           <span>{value.length} 文字</span>
         </div>
@@ -220,7 +274,7 @@ export function RichMarkdownEditor({
       {/* 編集タブ */}
       {activeTab === 'edit' && (
         <>
-          <EditorToolbar getView={getView} />
+          <EditorToolbar getView={getView} getFullContent={() => value} />
           <CodeMirror
             ref={editorRef}
             value={value}
@@ -258,7 +312,7 @@ export function RichMarkdownEditor({
       {/* 分割タブ */}
       {activeTab === 'split' && (
         <>
-          <EditorToolbar getView={getView} />
+          <EditorToolbar getView={getView} getFullContent={() => value} />
           <SplitPreview
             value={value}
             onChange={handleChange}

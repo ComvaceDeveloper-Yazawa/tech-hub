@@ -247,6 +247,7 @@ export function ArticleForm({
           onChange={setContent}
           onDrop={handleDrop}
           height={500}
+          articleId={defaultValues?.articleId ?? 'new'}
         />
         {errors.content && (
           <p role="alert" className="text-destructive text-sm">

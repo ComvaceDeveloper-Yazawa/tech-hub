@@ -26,9 +26,11 @@ import { wrap, prefixLine, insertBlock } from './editorCommands';
 import { ColorPicker } from './ColorPicker';
 import { SizePicker } from './SizePicker';
 import { TableButton } from './TableButton';
+import { AiAssistMenu } from './AiAssistMenu';
 
 interface EditorToolbarProps {
   getView: () => EditorView | null;
+  getFullContent?: () => string;
 }
 
 interface ToolButtonProps {
@@ -54,7 +56,7 @@ function Divider() {
   return <div className="mx-0.5 h-5 w-px bg-[#3e4451]" />;
 }
 
-export function EditorToolbar({ getView }: EditorToolbarProps) {
+export function EditorToolbar({ getView, getFullContent }: EditorToolbarProps) {
   function v(fn: (view: EditorView) => void) {
     return () => {
       const view = getView();
@@ -212,6 +214,14 @@ export function EditorToolbar({ getView }: EditorToolbarProps) {
       >
         <OctagonAlert size={15} className="text-red-400" />
       </ToolButton>
+
+      <Divider />
+
+      {/* AIアシスト */}
+      <AiAssistMenu
+        getView={getView}
+        getFullContent={getFullContent ?? (() => '')}
+      />
     </div>
   );
 }
