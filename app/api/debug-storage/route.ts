@@ -1,31 +1,38 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { TenantId } from '@/contexts/shared-kernel/TenantId';
 
 export async function GET() {
   try {
-    const supabase = await createClient();
     const tenantId = TenantId.personal().toString();
 
-    // バケット一覧
-    const { data: buckets, error: bucketsError } =
-      await supabase.storage.listBuckets();
-
-    // tenantId パスで list
-    const { data: files, error: filesError } = await supabase.storage
+    // anon キー（通常のサーバーアクションと同じ）
+    const supabase = await createClient();
+    const { data: anonFiles, error: anonError } = await supabase.storage
       .from('article-images')
       .list(tenantId, { limit: 10 });
 
-    // ルートで list
-    const { data: root, error: rootError } = await supabase.storage
-      .from('article-images')
-      .list('', { limit: 10 });
+    // セッション確認
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // service role キー
+    const serviceClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    const { data: serviceFiles, error: serviceError } =
+      await serviceClient.storage
+        .from('article-images')
+        .list(tenantId, { limit: 10 });
 
     return NextResponse.json({
       tenantId,
-      buckets: buckets?.map((b) => b.name) ?? bucketsError?.message,
-      files: files ?? filesError?.message,
-      root: root ?? rootError?.message,
+      sessionUser: user?.email ?? null,
+      anonFiles: anonFiles ?? anonError?.message,
+      serviceFiles: serviceFiles ?? serviceError?.message,
     });
   } catch (e) {
     return NextResponse.json(
