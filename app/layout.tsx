@@ -7,8 +7,11 @@ import { Toaster } from 'sonner';
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'Publishing Article',
+  title: 'YazawaBlog',
   description: 'Technical blog platform',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

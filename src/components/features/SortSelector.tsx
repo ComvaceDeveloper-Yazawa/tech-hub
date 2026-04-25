@@ -25,13 +25,17 @@ const SORT_OPTIONS = [
 ] as const;
 
 export function SortSelector({
-  currentSort = 'publishedAt',
-  currentDirection = 'desc',
+  currentSort,
+  currentDirection,
 }: SortSelectorProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const currentValue = `${currentSort}-${currentDirection}`;
+  // sort/dir が URL に明示的に指定されている場合のみ値をセット
+  const currentValue =
+    currentSort && currentDirection
+      ? `${currentSort}-${currentDirection}`
+      : undefined;
 
   const handleChange = useCallback(
     (value: string | null) => {
@@ -49,7 +53,7 @@ export function SortSelector({
   return (
     <Select value={currentValue} onValueChange={handleChange}>
       <SelectTrigger aria-label="ソート順を選択">
-        <SelectValue placeholder="ソート順" />
+        <SelectValue placeholder="並び替え" />
       </SelectTrigger>
       <SelectContent>
         {SORT_OPTIONS.map((option) => (

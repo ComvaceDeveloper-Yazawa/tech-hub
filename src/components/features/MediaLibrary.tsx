@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useTransition } from 'react';
+import { useState, useEffect, useCallback, useTransition, useRef } from 'react';
 import {
   ImageIcon,
   FolderIcon,
@@ -29,6 +29,7 @@ export function MediaLibrary({ onSelect, onClose }: MediaLibraryProps) {
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback((folder: string) => {
     startTransition(async () => {

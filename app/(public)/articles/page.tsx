@@ -18,20 +18,20 @@ export default async function ArticleListPage({
   searchParams,
 }: ArticleListPageProps) {
   const params = await searchParams;
-  const sort = params.sort ?? 'publishedAt';
-  const dir = params.dir ?? 'desc';
+  const sort = params.sort;
+  const dir = params.dir;
 
   const result = await listArticles({
     status: 'published',
     cursor: params.cursor,
     limit: 20,
-    sortField: sort as
+    sortField: (sort ?? 'publishedAt') as
       | 'publishedAt'
       | 'createdAt'
       | 'updatedAt'
       | 'viewCount'
       | 'likeCount',
-    sortDirection: dir as 'asc' | 'desc',
+    sortDirection: (dir ?? 'desc') as 'asc' | 'desc',
     tagId: params.tagId,
   });
 
@@ -47,7 +47,7 @@ export default async function ArticleListPage({
         </Suspense>
         <Suspense>
           <SortSelector currentSort={sort} currentDirection={dir} />
-        </Suspense>
+        </Suspense>{' '}
       </div>
 
       {result.items.length === 0 ? (
