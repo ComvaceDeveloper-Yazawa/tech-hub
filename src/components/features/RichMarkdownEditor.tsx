@@ -10,6 +10,9 @@ import { languages } from '@codemirror/language-data';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { EditorView, keymap } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { markdownKeymap } from '@/components/editor/markdownKeymap';
+import { EditorToolbar } from '@/components/editor/EditorToolbar';
+import { SplitPreview } from '@/components/editor/SplitPreview';
 import { EditorState } from '@codemirror/state';
 import type { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 
@@ -22,7 +25,7 @@ const CodeMirror = dynamic(() => import('@uiw/react-codemirror'), {
   ),
 });
 
-type Tab = 'edit' | 'preview' | 'guide';
+type Tab = 'edit' | 'split' | 'preview' | 'guide';
 
 interface RichMarkdownEditorProps {
   value: string;
@@ -149,7 +152,7 @@ export function RichMarkdownEditor({
   const extensions = [
     markdown({ base: markdownLanguage, codeLanguages: languages }),
     history(),
-    keymap.of([...defaultKeymap, ...historyKeymap]),
+    keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap]),
     EditorView.lineWrapping,
     editorTheme,
     EditorState.tabSize.of(2),
@@ -157,8 +160,11 @@ export function RichMarkdownEditor({
 
   const handleChange = useCallback((val: string) => onChange(val), [onChange]);
 
+  const getView = useCallback(() => editorRef.current?.view ?? null, []);
+
   const tabs: { id: Tab; label: string }[] = [
     { id: 'edit', label: '✏️ 編集' },
+    { id: 'split', label: '🔀 分割' },
     { id: 'preview', label: '👁 プレビュー' },
     { id: 'guide', label: '📖 記法ガイド' },
   ];
@@ -204,37 +210,54 @@ export function RichMarkdownEditor({
 
       {/* 編集タブ */}
       {activeTab === 'edit' && (
-        <CodeMirror
-          ref={editorRef}
-          value={value}
-          height={`${height}px`}
-          theme={oneDark}
-          extensions={extensions}
-          onChange={handleChange}
-          basicSetup={{
-            lineNumbers: true,
-            highlightActiveLineGutter: true,
-            highlightSpecialChars: true,
-            foldGutter: true,
-            drawSelection: true,
-            dropCursor: true,
-            allowMultipleSelections: true,
-            indentOnInput: true,
-            syntaxHighlighting: true,
-            bracketMatching: true,
-            closeBrackets: true,
-            autocompletion: false,
-            rectangularSelection: true,
-            crosshairCursor: false,
-            highlightActiveLine: true,
-            highlightSelectionMatches: true,
-            closeBracketsKeymap: true,
-            searchKeymap: true,
-            foldKeymap: true,
-            completionKeymap: false,
-            lintKeymap: false,
-          }}
-        />
+        <>
+          <EditorToolbar getView={getView} />
+          <CodeMirror
+            ref={editorRef}
+            value={value}
+            height={`${height}px`}
+            theme={oneDark}
+            extensions={extensions}
+            onChange={handleChange}
+            basicSetup={{
+              lineNumbers: true,
+              highlightActiveLineGutter: true,
+              highlightSpecialChars: true,
+              foldGutter: true,
+              drawSelection: true,
+              dropCursor: true,
+              allowMultipleSelections: true,
+              indentOnInput: true,
+              syntaxHighlighting: true,
+              bracketMatching: true,
+              closeBrackets: true,
+              autocompletion: false,
+              rectangularSelection: true,
+              crosshairCursor: false,
+              highlightActiveLine: true,
+              highlightSelectionMatches: true,
+              closeBracketsKeymap: true,
+              searchKeymap: true,
+              foldKeymap: true,
+              completionKeymap: false,
+              lintKeymap: false,
+            }}
+          />
+        </>
+      )}
+
+      {/* 分割タブ */}
+      {activeTab === 'split' && (
+        <>
+          <EditorToolbar getView={getView} />
+          <SplitPreview
+            value={value}
+            onChange={handleChange}
+            editorExtensions={extensions}
+            editorRef={editorRef}
+            height={height}
+          />
+        </>
       )}
 
       {/* プレビュータブ */}
