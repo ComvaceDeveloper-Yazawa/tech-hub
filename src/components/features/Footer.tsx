@@ -1,8 +1,10 @@
 export function Footer() {
   return (
-    <footer className="border-border border-t py-6">
+    <footer className="border-border relative z-10 border-t py-6">
       <p className="text-muted-foreground text-center text-sm">
-        © 2026 Tech Hub. All rights reserved.
+        © 2026{' '}
+        <span className="gradient-text inline-block font-medium">Tech Hub</span>
+        . All rights reserved.
       </p>
     </footer>
   );

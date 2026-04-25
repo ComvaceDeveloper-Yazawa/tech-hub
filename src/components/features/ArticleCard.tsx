@@ -19,7 +19,7 @@ export function ArticleCard({ article, className }: ArticleCardProps) {
   return (
     <Card
       className={cn(
-        'border-border bg-card hover:border-muted-foreground/30 flex flex-col shadow-none transition-colors',
+        'glow-card border-border bg-card/80 flex flex-col shadow-none backdrop-blur-sm transition-all duration-300',
         className
       )}
     >

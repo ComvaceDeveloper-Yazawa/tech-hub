@@ -37,9 +37,11 @@ export default async function ArticleListPage({
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-bold">記事一覧</h1>
+      <h1 className="animate-fade-in-up gradient-text mb-6 inline-block text-2xl font-bold">
+        記事一覧
+      </h1>
 
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="animate-fade-in stagger-1 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Suspense>
           <TagFilter currentTagId={params.tagId} />
         </Suspense>
@@ -49,18 +51,24 @@ export default async function ArticleListPage({
       </div>
 
       {result.items.length === 0 ? (
-        <p className="text-muted-foreground py-12 text-center">
+        <p className="text-muted-foreground animate-fade-in py-12 text-center">
           記事がありません
         </p>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {result.items.map((article) => (
-            <ArticleCard key={article.id} article={article} />
+          {result.items.map((article, i) => (
+            <div
+              key={article.id}
+              className="animate-fade-in-up"
+              style={{ animationDelay: `${0.1 + i * 0.05}s` }}
+            >
+              <ArticleCard article={article} />
+            </div>
           ))}
         </div>
       )}
 
-      <div className="mt-8">
+      <div className="animate-fade-in stagger-3 mt-8">
         <Suspense>
           <Pagination
             nextCursor={result.nextCursor}

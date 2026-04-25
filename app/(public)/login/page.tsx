@@ -37,12 +37,14 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-6">
+      <div className="animate-fade-in-up w-full max-w-sm space-y-6">
         <div className="text-center">
-          <h1 className="text-foreground text-2xl font-bold">ログイン</h1>
+          <h1 className="gradient-text inline-block text-2xl font-bold">
+            ログイン
+          </h1>
         </div>
 
-        <div className="border-border bg-card rounded-lg border p-6">
+        <div className="glow-card border-border bg-card/80 rounded-lg border p-6 backdrop-blur-sm">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div

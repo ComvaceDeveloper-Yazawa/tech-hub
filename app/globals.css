@@ -227,5 +227,181 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
   }
+}
+
+/* Geometric background shapes */
+.geo-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.geo-bg::before,
+.geo-bg::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.geo-bg::before {
+  width: 600px;
+  height: 600px;
+  background: oklch(0.55 0.2 260);
+  top: -200px;
+  right: -100px;
+  animation: float-slow 20s ease-in-out infinite;
+}
+
+.geo-bg::after {
+  width: 500px;
+  height: 500px;
+  background: oklch(0.65 0.15 300);
+  bottom: -150px;
+  left: -100px;
+  animation: float-slow 25s ease-in-out infinite reverse;
+}
+
+/* Grid pattern overlay */
+.grid-pattern {
+  background-image:
+    linear-gradient(oklch(0.5 0 0 / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.5 0 0 / 0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.dark .grid-pattern {
+  background-image:
+    linear-gradient(oklch(0.8 0 0 / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.8 0 0 / 0.04) 1px, transparent 1px);
+}
+
+/* Animations */
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -20px) scale(1.05);
+  }
+  66% {
+    transform: translate(-20px, 15px) scale(0.95);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out both;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.5s ease-out both;
+}
+
+/* Staggered animation delays */
+.stagger-1 {
+  animation-delay: 0.1s;
+}
+.stagger-2 {
+  animation-delay: 0.2s;
+}
+.stagger-3 {
+  animation-delay: 0.3s;
+}
+.stagger-4 {
+  animation-delay: 0.4s;
+}
+.stagger-5 {
+  animation-delay: 0.5s;
+}
+.stagger-6 {
+  animation-delay: 0.6s;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(
+    135deg,
+    oklch(0.55 0.2 260),
+    oklch(0.65 0.15 300),
+    oklch(0.6 0.18 280)
+  );
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 6s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Glow card hover effect */
+.glow-card {
+  position: relative;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.glow-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px oklch(0.55 0.2 260 / 0.1);
+}
+
+/* Glassmorphism header */
+.glass-header {
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  background: oklch(1 0 0 / 0.7);
+}
+
+.dark .glass-header {
+  background: oklch(0 0 0 / 0.7);
 }

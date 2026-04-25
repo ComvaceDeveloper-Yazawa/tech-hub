@@ -35,10 +35,10 @@ export default async function ArticleDetailPage({
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-8">
-      <header className="mb-8">
+      <header className="animate-fade-in-up mb-8">
         <h1 className="mb-4 text-3xl font-bold">{article.title}</h1>
 
-        <div className="text-muted-foreground mb-4 flex flex-wrap items-center gap-4 text-sm">
+        <div className="text-muted-foreground animate-fade-in stagger-1 mb-4 flex flex-wrap items-center gap-4 text-sm">
           {article.publishedAt && (
             <span className="inline-flex items-center gap-1">
               <Calendar className="size-4" aria-hidden="true" />
@@ -54,7 +54,7 @@ export default async function ArticleDetailPage({
         </div>
 
         {article.tagIds.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="animate-fade-in stagger-2 flex flex-wrap gap-2">
             {article.tagIds.map((tagId) => (
               <Link key={tagId} href={`/articles?tagId=${tagId}`}>
                 <Badge variant="secondary">{tagId}</Badge>
@@ -64,13 +64,13 @@ export default async function ArticleDetailPage({
         )}
       </header>
 
-      <div className="prose prose-lg dark:prose-invert max-w-none">
+      <div className="prose prose-lg dark:prose-invert animate-fade-in stagger-2 max-w-none">
         <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
           {article.content}
         </ReactMarkdown>
       </div>
 
-      <footer className="border-border mt-8 flex items-center gap-2 border-t pt-4">
+      <footer className="border-border animate-fade-in stagger-3 mt-8 flex items-center gap-2 border-t pt-4">
         <LikeButton
           articleId={article.id}
           initialLikeCount={article.likeCount}

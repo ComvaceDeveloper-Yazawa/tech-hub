@@ -11,11 +11,11 @@ export async function Header() {
   const isAuthenticated = !!user;
 
   return (
-    <header className="bg-background border-border border-b">
+    <header className="glass-header border-border sticky top-0 z-50 border-b">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
         <Link
           href="/"
-          className="focus-visible:ring-ring text-foreground rounded text-lg font-bold focus-visible:ring-2 focus-visible:outline-none"
+          className="focus-visible:ring-ring gradient-text rounded text-lg font-bold focus-visible:ring-2 focus-visible:outline-none"
         >
           Tech Hub
         </Link>
@@ -26,7 +26,7 @@ export async function Header() {
         >
           <Link
             href="/articles"
-            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded text-sm font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-none"
           >
             記事一覧
           </Link>
@@ -34,13 +34,13 @@ export async function Header() {
             <>
               <Link
                 href="/bookmarks"
-                className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded text-sm font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-none"
               >
                 ブックマーク
               </Link>
               <Link
                 href="/admin/articles"
-                className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded text-sm font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-none"
               >
                 管理
               </Link>
@@ -48,7 +48,7 @@ export async function Header() {
           ) : (
             <Link
               href="/login"
-              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded text-sm font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-none"
             >
               ログイン
             </Link>
