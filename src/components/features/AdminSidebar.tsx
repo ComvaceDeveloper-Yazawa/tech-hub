@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { headers } from 'next/headers';
-import { FileText, PlusCircle } from 'lucide-react';
+import { FileText, PlusCircle, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 const NAV_ITEMS = [
   { href: '/admin/articles', label: '記事一覧', icon: FileText },
   { href: '/admin/articles/new', label: '新規作成', icon: PlusCircle },
+  { href: '/admin/media', label: 'メディア', icon: ImageIcon },
 ] as const;
 
 export async function AdminSidebar() {

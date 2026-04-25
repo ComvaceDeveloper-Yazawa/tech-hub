@@ -4,9 +4,12 @@ import { useState, useTransition, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Dialog } from '@/components/ui/dialog';
+import { MediaLibrary } from '@/components/features/MediaLibrary';
 import { uploadImage } from '@/presentation/actions/uploadImage';
 
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
@@ -58,6 +61,7 @@ export function ArticleForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [mediaOpen, setMediaOpen] = useState(false);
 
   const handleImageUpload = useCallback(async (file: File) => {
     const formData = new FormData();
@@ -175,7 +179,18 @@ export function ArticleForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="content">本文</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="content">本文</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setMediaOpen(true)}
+          >
+            <ImageIcon className="mr-1 h-4 w-4" />
+            メディア
+          </Button>
+        </div>
         <div onDrop={handleDrop} onDragOver={(e) => e.preventDefault()}>
           <MDEditor
             value={content}
@@ -189,6 +204,22 @@ export function ArticleForm({
           </p>
         )}
       </div>
+
+      {mediaOpen && (
+        <Dialog open={mediaOpen} onOpenChange={setMediaOpen}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-background border-border h-[80vh] w-[90vw] max-w-4xl overflow-hidden rounded-lg border shadow-lg">
+              <MediaLibrary
+                onSelect={(url) => {
+                  setContent((prev) => `${prev}\n![image](${url})\n`);
+                  toast.success('画像を挿入しました');
+                }}
+                onClose={() => setMediaOpen(false)}
+              />
+            </div>
+          </div>
+        </Dialog>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="tagIds">タグ ID（カンマ区切り）</Label>

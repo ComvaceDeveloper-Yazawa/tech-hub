@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, FileText, PlusCircle } from 'lucide-react';
+import { Menu, FileText, PlusCircle, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -17,6 +17,7 @@ import { cn } from '@/lib/cn';
 const NAV_ITEMS = [
   { href: '/admin/articles', label: '記事一覧', icon: FileText },
   { href: '/admin/articles/new', label: '新規作成', icon: PlusCircle },
+  { href: '/admin/media', label: 'メディア', icon: ImageIcon },
 ] as const;
 
 export function AdminMobileSidebar() {
