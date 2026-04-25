@@ -31,6 +31,7 @@ export function DeleteButton({ articleId, articleTitle }: DeleteButtonProps) {
         await deleteArticle({ articleId });
         setOpen(false);
         router.refresh();
+        toast.success('記事を削除しました');
       } catch {
         toast.error('記事の削除に失敗しました');
       }
@@ -46,7 +47,7 @@ export function DeleteButton({ articleId, articleTitle }: DeleteButtonProps) {
       >
         削除
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>記事の削除</DialogTitle>
           <DialogDescription>
