@@ -53,11 +53,11 @@ export default async function ArticleDetailPage({
           </span>
         </div>
 
-        {article.tagIds.length > 0 && (
+        {article.tags.length > 0 && (
           <div className="animate-fade-in stagger-2 flex flex-wrap gap-2">
-            {article.tagIds.map((tagId) => (
-              <Link key={tagId} href={`/articles?tagId=${tagId}`}>
-                <Badge variant="secondary">{tagId}</Badge>
+            {article.tags.map((tag) => (
+              <Link key={tag.id} href={`/articles?tagId=${tag.id}`}>
+                <Badge variant="secondary">{tag.name}</Badge>
               </Link>
             ))}
           </div>
