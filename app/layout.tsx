@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className={cn('font-sans', geist.variable)}>
+    <html lang="ja" className={cn('dark font-sans', geist.variable)}>
       <body>
         {children}
         <Toaster />

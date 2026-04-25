@@ -39,51 +39,53 @@ export default function LoginPage() {
     <div className="flex min-h-[60vh] items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">ログイン</h1>
+          <h1 className="text-foreground text-2xl font-bold">ログイン</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div
-              role="alert"
-              className="rounded-md bg-red-50 p-3 text-sm text-red-600"
-            >
-              {error}
+        <div className="border-border bg-card rounded-lg border p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div
+                role="alert"
+                className="border-destructive/50 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
+              >
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="email">メールアドレス</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
             </div>
-          )}
 
-          <div className="space-y-2">
-            <Label htmlFor="email">メールアドレス</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">パスワード</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">パスワード</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-            />
-          </div>
-
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? 'ログイン中...' : 'ログイン'}
-          </Button>
-        </form>
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? 'ログイン中...' : 'ログイン'}
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

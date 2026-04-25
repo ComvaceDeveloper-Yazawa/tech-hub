@@ -64,13 +64,13 @@ export default async function ArticleDetailPage({
         )}
       </header>
 
-      <div className="prose prose-lg max-w-none">
+      <div className="prose prose-lg dark:prose-invert max-w-none">
         <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
           {article.content}
         </ReactMarkdown>
       </div>
 
-      <footer className="mt-8 flex items-center gap-2 border-t pt-4">
+      <footer className="border-border mt-8 flex items-center gap-2 border-t pt-4">
         <LikeButton
           articleId={article.id}
           initialLikeCount={article.likeCount}

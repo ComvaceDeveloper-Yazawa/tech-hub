@@ -11,17 +11,17 @@ export async function Header() {
   const isAuthenticated = !!user;
 
   return (
-    <header className="bg-background border-b">
+    <header className="bg-background border-border border-b">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
         <Link
           href="/"
-          className="focus-visible:ring-ring rounded text-lg font-bold focus-visible:ring-2 focus-visible:outline-none"
+          className="focus-visible:ring-ring text-foreground rounded text-lg font-bold focus-visible:ring-2 focus-visible:outline-none"
         >
           Tech Hub
         </Link>
 
         <nav
-          className="hidden items-center gap-4 md:flex"
+          className="hidden items-center gap-6 md:flex"
           aria-label="メインナビゲーション"
         >
           <Link

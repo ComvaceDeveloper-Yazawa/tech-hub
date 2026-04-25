@@ -24,7 +24,7 @@ export default async function AdminLayout({
       <div className="flex flex-1">
         <AdminSidebar />
         <div className="flex flex-1 flex-col md:ml-0">
-          <div className="border-b p-2 md:hidden">
+          <div className="border-border border-b p-2 md:hidden">
             <AdminMobileSidebar />
           </div>
           <main className="flex-1 p-4 md:p-6">{children}</main>

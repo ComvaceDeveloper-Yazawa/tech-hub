@@ -1,12 +1,6 @@
 import Link from 'next/link';
 import { Eye, Heart, Calendar } from 'lucide-react';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { cn } from '@/lib/cn';
 
 interface ArticleCardProps {
@@ -23,12 +17,17 @@ interface ArticleCardProps {
 
 export function ArticleCard({ article, className }: ArticleCardProps) {
   return (
-    <Card className={cn('flex flex-col', className)}>
+    <Card
+      className={cn(
+        'border-border bg-card hover:border-muted-foreground/30 flex flex-col shadow-none transition-colors',
+        className
+      )}
+    >
       <CardHeader>
         <CardTitle>
           <Link
             href={`/articles/${article.slug}`}
-            className="focus-visible:ring-ring rounded hover:underline focus-visible:ring-2 focus-visible:outline-none"
+            className="focus-visible:ring-ring text-foreground rounded hover:underline focus-visible:ring-2 focus-visible:outline-none"
           >
             {article.title}
           </Link>

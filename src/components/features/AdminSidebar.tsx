@@ -13,7 +13,7 @@ export async function AdminSidebar() {
   const pathname = headersList.get('x-pathname') ?? '';
 
   return (
-    <aside className="bg-muted/30 hidden w-64 shrink-0 border-r md:block">
+    <aside className="border-border bg-background hidden w-64 shrink-0 border-r md:block">
       <nav className="flex flex-col gap-1 p-4" aria-label="管理ナビゲーション">
         {NAV_ITEMS.map((item) => {
           const isActive =
@@ -28,8 +28,8 @@ export async function AdminSidebar() {
               className={cn(
                 'focus-visible:ring-ring flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none',
                 isActive
-                  ? 'bg-muted text-foreground'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  ? 'bg-secondary text-foreground'
+                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
               )}
             >
               <item.icon className="size-4" aria-hidden="true" />
