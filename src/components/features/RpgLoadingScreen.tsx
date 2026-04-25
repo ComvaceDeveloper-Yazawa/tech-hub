@@ -20,30 +20,43 @@ export function RpgLoadingScreen() {
   const [messageIndex, setMessageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const shownAtRef = useRef<number | null>(null);
+  const minElapsedRef = useRef(false);
+  const loadingDoneRef = useRef(true);
 
+  // isLoading の変化を追跡
   useEffect(() => {
-    let hideTimer: ReturnType<typeof setTimeout>;
-
     if (isLoading) {
-      // 表示開始時刻を即記録して即表示
+      // 表示開始
       shownAtRef.current = Date.now();
+      minElapsedRef.current = false;
+      loadingDoneRef.current = false;
       setVisible(true);
     } else {
-      // 表示開始から MIN_DISPLAY_MS 経過するまで待ってから非表示
-      const elapsed = shownAtRef.current
-        ? Date.now() - shownAtRef.current
-        : MIN_DISPLAY_MS;
-      const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
-      hideTimer = setTimeout(() => {
+      // ローディング処理は完了した
+      loadingDoneRef.current = true;
+      // 最低表示時間も経過済みなら即非表示
+      if (minElapsedRef.current) {
         setVisible(false);
         shownAtRef.current = null;
-      }, remaining);
+      }
     }
-
-    return () => {
-      clearTimeout(hideTimer);
-    };
   }, [isLoading]);
+
+  // 最低3秒タイマー
+  useEffect(() => {
+    if (!visible) return;
+
+    const timer = setTimeout(() => {
+      minElapsedRef.current = true;
+      // ローディング処理も完了済みなら非表示
+      if (loadingDoneRef.current) {
+        setVisible(false);
+        shownAtRef.current = null;
+      }
+    }, MIN_DISPLAY_MS);
+
+    return () => clearTimeout(timer);
+  }, [visible]);
 
   useEffect(() => {
     if (!visible) return;
@@ -73,9 +86,7 @@ export function RpgLoadingScreen() {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center transition-opacity duration-300 ${
-        isLoading ? 'opacity-100' : 'opacity-0'
-      }`}
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center opacity-100 transition-opacity duration-300`}
       style={{
         background:
           'radial-gradient(ellipse at center, #0a0a1a 0%, #000008 100%)',

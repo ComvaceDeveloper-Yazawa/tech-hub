@@ -7,6 +7,7 @@ import { ArticleCard } from '@/components/features/ArticleCard';
 import { Pagination } from '@/components/features/Pagination';
 import { SortSelector } from '@/components/features/SortSelector';
 import { TagFilter } from '@/components/features/TagFilter';
+import { LoadingDismiss } from '@/components/features/LoadingDismiss';
 
 interface ArticleListPageProps {
   searchParams: Promise<{
@@ -50,6 +51,7 @@ export default async function ArticleListPage({
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
+      <LoadingDismiss />
       <div className="animate-fade-in-up mb-6 flex items-center justify-between">
         <h1 className="gradient-text inline-block text-2xl font-bold">
           記事一覧

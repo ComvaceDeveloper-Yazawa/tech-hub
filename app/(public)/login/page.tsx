@@ -34,7 +34,9 @@ export default function LoginPage() {
         return;
       }
 
-      hideLoading();
+      // hideLoading は呼ばない — ページ遷移完了後に
+      // 遷移先のレイアウトがマウントされた時点で LoadingContext がリセットされる。
+      // RpgLoadingScreen 側で最低3秒表示 + isLoading が false になるまで待つ。
       router.push('/articles');
       router.refresh();
     });
