@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { useLoading } from '@/contexts/loading/LoadingContext';
 
@@ -12,20 +12,33 @@ const LOADING_MESSAGES = [
   'システムを更新中...',
 ];
 
+const MIN_DISPLAY_MS = 3000;
+
 export function RpgLoadingScreen() {
   const { isLoading } = useLoading();
   const [visible, setVisible] = useState(false);
   const [messageIndex, setMessageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const shownAtRef = useRef<number | null>(null);
 
   useEffect(() => {
     let showTimer: ReturnType<typeof setTimeout>;
     let hideTimer: ReturnType<typeof setTimeout>;
 
     if (isLoading) {
-      showTimer = setTimeout(() => setVisible(true), 100);
+      showTimer = setTimeout(() => {
+        shownAtRef.current = Date.now();
+        setVisible(true);
+      }, 100);
     } else {
-      hideTimer = setTimeout(() => setVisible(false), 300);
+      const elapsed = shownAtRef.current
+        ? Date.now() - shownAtRef.current
+        : MIN_DISPLAY_MS;
+      const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
+      hideTimer = setTimeout(() => {
+        setVisible(false);
+        shownAtRef.current = null;
+      }, remaining);
     }
 
     return () => {

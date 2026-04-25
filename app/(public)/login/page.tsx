@@ -34,6 +34,7 @@ export default function LoginPage() {
         return;
       }
 
+      hideLoading();
       router.push('/articles');
       router.refresh();
     });

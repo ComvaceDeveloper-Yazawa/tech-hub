@@ -6,468 +6,834 @@ const prisma = new PrismaClient();
 const TENANT_ID = '00000000000000000000000000';
 const AUTHOR_ID = '00000000000000000000000001';
 
-// バッククォート4つのコードブロック区切り（Markdown内で ``` を扱うため）
-const CB = '````';
 const CB3 = '```';
 
-const content = `# AIエージェントにMarkdownエディタを作らせた話 — AIDLCの進め方を徹底解説
+const content = `# マークアップ言語を習得した人のためのTypeScript基礎 — 型で守る堅牢なフロントエンド開発
 
 ## はじめに
 
-AIコーディングエージェント（Cursor、Claude Code、Kiro、Cline など）が実用レベルに到達し、「**AIに実装を任せて人間は設計と監督に回る**」という開発スタイルが現実的になりました。この開発ライフサイクルを **AIDLC（AI-Driven Development Life Cycle）** と呼びます。
+HTML / CSS を書けるようになり、JavaScript に触れ始めたあなた。今度は「**TypeScript**」という単語があちこちで出てきて戸惑っていませんか？
 
-しかし実際にやってみると、すぐに壁にぶつかります。
+- 求人票に「TypeScript必須」「TypeScript歓迎」ばかり
+- Vue / React のチュートリアルが TypeScript 前提になっている
+- 「型」「ジェネリクス」「インターフェース」って何の呪文...？
 
-- 「全部一気に作って」と丸投げすると**品質が崩壊する**
-- スコープが広がり、AIが**親切心で余計な機能を足してくる**
-- **既存コードの規約を無視**した実装が混ざる
-- 動作確認が後回しになり、**後から大量の手戻り**が発生
-
-本記事では、筆者が実際に AIエージェント（Kiro）に対して**ブログエディタの高機能化**を依頼した実例を元に、**AIDLCを破綻させずに回すための実践的な進め方**を徹底解説します。
+本記事は、**HTML / CSS / 少しのJavaScript**を書いた経験がある読者を想定し、**TypeScript を実務レベルで書けるようになるための最短ロードマップ**を解説します。難しい数学や型理論は扱いません。**明日からコードを書き始められる実用知識**に絞ります。
 
 > [!NOTE]
-> 本記事のサンプルとなるエディタは、CodeMirror + React + Next.js ベースの Markdown エディタで、**ショートカット装飾・ツールバー・スラッシュコマンド・画像ペースト・自動保存・AIアシスト**などを備えた Notion 級のUXを目指したものです。
+> 本記事では TypeScript 5.x 系を前提にします。Vue 3 / React で TypeScript を使うことを想定した実用的な内容中心です。
 
 ## TL;DR
 
-AIDLC を成功させる5つの原則：
+TypeScript 習得には、**6つのステップ**を順に進みます：
 
-1. **Phase分割する**: 1機能ずつ実装・動作確認・コミット
-2. **依存関係を明示する**: 「このPhaseはPhase Xの完了が前提」と書く
-3. **事前調査を必須化する**: 既存コードの仕様確認をAIにやらせてから着手させる
-4. **スコープ外を明記する**: やらないことリストが、やることリストと同じくらい重要
-5. **受け入れ基準を数値化する**: 完了判定を曖昧にしない
+1. **Step 1**: なぜTypeScriptが必要か、環境構築（2日）
+2. **Step 2**: 基本の型（string / number / boolean / array / object）（3日）
+3. **Step 3**: 関数と戻り値の型（3日）
+4. **Step 4**: 型エイリアスとインターフェース（3日）
+5. **Step 5**: ユニオン型・ジェネリクス・ユーティリティ型（1週間）
+6. **Step 6**: 実践 — Vue / React / API連携で使う（2週間）
 
-この5つを守るだけで、AI実装の成功率が体感で**3倍**になります。
+**合計3〜4週間**（1日1〜2時間）。重要なのは「**JSの基礎を先に固める**」「**any に逃げない**」「**自分のプロジェクトで使う**」の3点です。
 
 ## 目次
 
-- [AIDLC とは何か](#aidlc-とは何か)
-- [AIDLC が破綻する典型パターン](#aidlc-が破綻する典型パターン)
-- [実例: ブログエディタ高機能化プロジェクト](#実例-ブログエディタ高機能化プロジェクト)
-- [AIDLC 実践5原則](#aidlc-実践5原則)
-- [プロンプトテンプレート](#プロンプトテンプレート)
-- [AIDLC のアンチパターン](#aidlc-のアンチパターン)
-- [まとめ](#まとめ)
+- [そもそもTypeScriptとは何か](#そもそもtypescriptとは何か)
+- [Step 1: 環境構築と初めてのTS](#step-1-環境構築と初めてのts)
+- [Step 2: 基本の型](#step-2-基本の型)
+- [Step 3: 関数と型](#step-3-関数と型)
+- [Step 4: 型エイリアスとインターフェース](#step-4-型エイリアスとインターフェース)
+- [Step 5: 実践で使う応用型](#step-5-実践で使う応用型)
+- [Step 6: フレームワークでの実践](#step-6-フレームワークでの実践)
+- [つまずきポイントと対処法](#つまずきポイントと対処法)
 
-## AIDLC とは何か
+## そもそもTypeScriptとは何か
 
-AIDLC（AI-Driven Development Life Cycle）とは、**AIエージェントを中核に据えたソフトウェア開発のライフサイクル**です。従来の SDLC（Software Development Life Cycle）では人間が全工程を担っていたのに対し、AIDLC では**実装・テスト・リファクタリングの大部分をAIが担当し、人間は設計・レビュー・監督に集中**します。
+### 一言で言うと「型が付けられるJavaScript」
 
-### 従来のSDLCとの比較
-
-| 工程 | 従来のSDLC | AIDLC |
-|---|---|---|
-| 要件定義 | 人間 | 人間（AIが補助） |
-| 設計 | 人間 | **人間（最重要）** |
-| **実装** | **人間** | **AI** |
-| テスト | 人間（一部自動化） | AI + 人間レビュー |
-| デプロイ | 人間 | AI + 人間承認 |
-| 監督・最終判断 | マネージャー | **人間（新たな主業務）** |
-
-### AIDLC で人間がやるべきこと
-
-AIDLC では、**人間のレバレッジポイントが変わります**。コードを書く時間は激減する一方で、次の作業の比重が増えます：
-
-- **プロンプト設計**: AIに何をどう指示するか
-- **アーキテクチャ判断**: 全体構造、Phase分割の粒度
-- **制約の明文化**: やってほしくないことの具体化
-- **受け入れ基準の策定**: 完了をどう判定するか
-- **コードレビュー**: AIの出力の妥当性チェック
-
-> [!TIP]
-> AIDLC 時代のエンジニアは、**「コードを書ける人」から「良い問いを立てられる人」** へと価値基準がシフトします。
-
-## AIDLC が破綻する典型パターン
-
-理論だけ聞くと「AIに任せれば楽になる」と思いがちですが、実際にはすぐに壁にぶつかります。筆者が観察した破綻パターンを3つ紹介します。
-
-### パターン1: 丸投げ爆発
-
-${CB3}
-👤「Notion風のエディタ作って。ショートカット、ツールバー、スラッシュコマンド、
-   画像ペースト、自動保存、AIアシスト全部盛りで」
-
-🤖「承知しました！」
-   （2時間後、4,000行のコードと20個のファイルを生成）
-
-👤「動かない...どこから直せば...」
-${CB3}
-
-一度に依頼する機能が多すぎると、AIが**各機能の細部を詰めきれず**、動作検証も困難な巨大PRが生まれます。
-
-### パターン2: スコープクリープ
-
-AIは「気を利かせて」周辺機能を勝手に追加する傾向があります。
-
-${CB3}
-👤「ツールバーに太字ボタンを追加して」
-
-🤖「太字ボタンに加え、見出し、リスト、テーブル、
-   AI アシスト機能、テーマ切り替え、絵文字ピッカーも追加しておきました！」
-
-👤「余計なことを...」
-${CB3}
-
-依頼スコープが曖昧だと、AIは**最大解釈**で実装します。これ自体は善意ですが、既存コードの整合性を壊す原因になります。
-
-### パターン3: 推測で突き進む
-
-既存コードの仕様を確認せず、**推測で実装**してしまうパターン。
-
-${CB3}
-🤖「画像アップロードAPIを /api/upload にPOSTしました」
-👤「うちのAPIは /api/media/upload だよ...」
-
-🤖「レスポンスの画像URLは data.imageUrl で取得しました」
-👤「うちは data.url なんだけど...」
-${CB3}
-
-AIは「**よくある仕様**」で実装しがちですが、実プロジェクトには独自規約があります。これを無視すると、動きはするが既存と噛み合わないコードが量産されます。
-
-## 実例: ブログエディタ高機能化プロジェクト
-
-筆者が実際に取り組んだ事例を紹介します。目標は**Notion級のUX × GitHub Copilot級の執筆支援 × Markdownの可搬性**を備えたブログエディタの構築でした。
-
-### やりたいこと一覧
-
-- ✅ ショートカット駆動のMarkdown装飾
-- ✅ ツールバー（色変更・テーブル・リスト等）
-- ✅ サイドバイサイドプレビュー
-- ✅ スラッシュコマンド（Notion風）
-- ✅ 画像の貼り付け・D&D（自動アップロード）
-- ✅ ペースト時の自動フォーマット（Prettier）
-- ✅ 自動保存 & 復元
-- ✅ AIアシスト（校正・翻訳・タイトル生成等）
-
-普通に「全部作って」と依頼したら確実にパターン1で爆発します。そこで**4つのPhaseに分割**しました。
-
-### Phase分割の設計
+TypeScript は、**JavaScript に「型」の概念を追加した言語**です。Microsoft が開発し、2012年にリリースされました。
 
 ${CB3}mermaid
-graph TD
-    A[Phase 1: 基盤整備] --> B[Phase 2: UI層]
-    A --> C[Phase 3: 入力体験]
-    B --> D[Phase 4: 信頼性・生産性]
-    C --> D
-
-    A1[editorCommands.ts<br/>ショートカット] -.所属.-> A
-    B1[ツールバー<br/>サイドバイサイド] -.所属.-> B
-    C1[スラッシュコマンド<br/>画像ペースト<br/>自動フォーマット] -.所属.-> C
-    D1[自動保存<br/>AIアシスト] -.所属.-> D
+graph LR
+    A[TypeScript<br/>.ts ファイル] -->|コンパイル| B[JavaScript<br/>.js ファイル]
+    B --> C[ブラウザ / Node.js<br/>で実行]
 ${CB3}
 
-各Phaseには以下の特徴を持たせました：
+ブラウザは TypeScript を直接実行できないので、**コンパイル（変換）** して JavaScript にしてから実行します。
 
-| Phase | 目的 | 前提 | 提供価値 |
-|---|---|---|---|
-| 1 | 共通基盤 | なし | 後続の土台になる関数群 |
-| 2 | UI層 | Phase 1 | 目に見える改善 |
-| 3 | 入力体験 | Phase 2 | 「書いていて気持ちいい」UX |
-| 4 | 信頼性 | Phase 3 | プロダクト品質への昇格 |
+### なぜ型が必要なのか
 
-**Phase 1 を最も丁寧に設計**したのがポイントです。ここで \`editorCommands.ts\` という共通ユーティリティを作ることで、Phase 2 以降の全ボタン・全コマンドがこの関数を呼ぶだけで済むようになりました。
+JavaScript で以下のバグを想像してください。
 
-### 各Phaseのプロンプト構造
+${CB3}js
+function calcTax(price) {
+  return price * 1.1
+}
 
-各Phaseで使ったプロンプトは、以下の8セクションで構成しました。
-
-${CB3}markdown
-# タスク: [Phase名と目的を1文で]
-
-## 🎯 ゴール
-[何を達成するか、2〜3文で明確に]
-
-## 📂 前提条件
-[依存するPhaseや既存ファイル]
-
-## 🔍 事前調査タスク（実装前に必ず実施）
-[既存コードの確認事項。推測で実装させない]
-
-## 📦 必要なパッケージ
-[インストールすべきもの]
-
-## 📐 制約事項（必ず守ること）
-[やってはいけないこと、既存規約]
-
-## 📁 作成・変更するファイル
-[ファイルごとに仕様を詳細記述]
-
-## ✅ 受け入れ基準
-[チェックリスト形式で完了判定]
-
-## 🚫 やらないこと（スコープ外）
-[次Phase以降に回すもの]
-
-## 💬 完了報告のフォーマット
-[何を報告してほしいか]
+calcTax('1000')  // "10001.1" という文字列が返る（バグ）
+calcTax(null)    // NaN が返る（バグ）
+calcTax()        // NaN が返る（バグ）
 ${CB3}
 
-この構造を4フェーズ分繰り返すことで、**AIが迷わず、かつスコープを広げない**状況を作れました。
+素の JavaScript では、**実行するまで間違いに気づけません**。しかも本番環境で発覚することも多い。
 
-## AIDLC 実践5原則
+TypeScript なら：
 
-プロジェクトを通じて見えてきた、AIDLC を破綻させないための5原則を紹介します。
+${CB3}ts
+function calcTax(price: number): number {
+  return price * 1.1
+}
 
-### 原則1: Phase分割する
-
-**1つのPhaseで扱う機能は、動作確認が30分以内に終わる粒度**にします。
-
-> [!WARNING]
-> 「ついでにあれもこれも」とPhase内に機能を詰めると、動作確認が後回しになり、バグの発生源が特定できなくなります。
-
-Phase分割の粒度の目安：
-
-| 粒度 | 例 | 推奨？ |
-|---|---|---|
-| 細かすぎる | 「太字ボタン1つだけ追加」 | ❌ |
-| 適切 | 「ツールバー全体（10ボタン）+ サイドバイサイド」 | ✅ |
-| 大きすぎる | 「ツールバー + スラッシュ + 画像 + 保存 + AI」 | ❌ |
-
-筆者の経験則では、**1 Phase = AIの作業1〜2時間 = 人間のレビュー30分〜1時間**が最も効率的です。
-
-### 原則2: 依存関係を明示する
-
-各Phaseのプロンプト冒頭で、**前提条件**を明示します。
-
-${CB3}markdown
-## 📂 前提条件
-
-以下が完了していること：
-- Phase 1: \`editorCommands.ts\` が存在し動作中
-- Phase 2: \`EditorToolbar.tsx\` が存在し動作中
-- 既存のメディアアップロードAPIが存在する（後述の調査で確認）
+calcTax('1000')  // ❌ コンパイルエラー
+calcTax(null)    // ❌ コンパイルエラー
+calcTax()        // ❌ コンパイルエラー
 ${CB3}
 
-これにより、AIは「何を前提に実装すべきか」を誤解しません。また、**Phase間の動作確認をスキップできない**圧力がかかります。
+**書いた瞬間にエディタが赤線で警告**してくれます。
 
-### 原則3: 事前調査を必須化する
+### TypeScript の3大メリット
 
-AIDLC 最大のハマりどころは、**AIが推測で実装してしまうこと**です。これを防ぐには、**実装前に調査タスクを必ず実施させる**のが効きます。
+#### 1. バグを早期発見
 
-${CB3}markdown
-## 🔍 事前調査タスク（実装前に必ず実施）
+実行前にエラーを検出。本番で落ちるバグが激減。
 
-実装着手前に、以下を調査して報告すること：
+#### 2. エディタの補完が超強力
 
-1. メディアアップロードAPIの仕様
-   - エンドポイントURL
-   - リクエスト形式（FormData のフィールド名）
-   - レスポンス形式（返却されるURLのキー名）
-2. 既存の handleDrop 関数の実装内容
-3. トースト通知ライブラリの有無
+VS Code で \`user.\` と打つと、\`name\`、\`age\`、\`email\` など利用可能なプロパティが**全部サジェスト**されます。関数の引数も型情報付きで教えてくれる。
 
-**調査結果を報告した上で、実装方針の擦り合わせを行ってから
-実装に着手すること**。不明点があれば推測せず質問する。
-${CB3}
+#### 3. ドキュメントとしての型
 
-このセクションを入れるだけで、**既存API仕様と噛み合わない実装**が劇的に減ります。
-
-> [!TIP]
-> 「調査結果を先に報告させる」のがコツです。いきなり実装させると、調査しながらその場で実装してしまい、後戻りできなくなります。
-
-### 原則4: スコープ外を明記する
-
-AIは善意で機能を足してきます。これを防ぐには、**やらないことを明示**するしかありません。
-
-${CB3}markdown
-## 🚫 やらないこと（スコープ外）
-
-以下は**次フェーズのタスク**なので、今回は**絶対に実装しない**：
-
-- ツールバーUI
-- スラッシュコマンド
-- 画像ペースト
-- 自動保存
-- AIアシスト
-
-これらに関するコードや準備（関数の空実装など）も一切作成しないこと。
-スコープを広げず、上記3ファイルのみに集中する。
-${CB3}
-
-ポイントは「**絶対に**」「**一切**」といった強い否定語を使うこと。AIは柔らかい指示を「希望」と解釈しがちですが、強い表現は「禁止」として受け取ります。
-
-### 原則5: 受け入れ基準を数値化する
-
-「完了しました」の判定を曖昧にしないため、**チェックリスト形式**で受け入れ基準を書きます。
-
-${CB3}markdown
-## ✅ 受け入れ基準
-
-実装完了後、以下を全て満たすこと：
-
-- [ ] \`npm run build\` / \`tsc --noEmit\` がエラーなく通る
-- [ ] Cmd+B で \`**太字**\` が挿入され、"太字"部分が選択状態になる
-- [ ] テキストを選択した状態で Cmd+I を押すと、選択範囲が \`*\` で囲まれる
-- [ ] 事前にブラウザで URL をコピーした状態で Cmd+K を押すと、
-      自動で [リンクテキスト](コピーしたURL) が挿入される
-- [ ] 既存の Cmd+Z（undo）、Cmd+F（検索）が壊れていない
-- [ ] エディタの見た目が変わっていない
-${CB3}
-
-**具体的な操作と期待結果**を書くことで、AIの「動作確認しました」という曖昧な報告を防げます。筆者は**1 Phase あたり 15〜30項目**のチェックリストを用意しました。
+型を見れば**関数の使い方が一目でわかる**。コメントを読まなくても、何を渡せばいいか・何が返るかが明確。
 
 > [!IMPORTANT]
-> 受け入れ基準には「**既存機能が壊れていないか**」の項目を必ず含めること。回帰バグの発見率が大きく変わります。
+> 現代のフロントエンド求人は、**TypeScript必須** がデフォルトになりつつあります。「JavaScriptは書けるがTSは未経験」では書類落ちするケースも。**これからフロントエンドを学ぶなら、最初から TypeScript で書く**のが投資対効果が高い選択です。
 
-## プロンプトテンプレート
+## Step 1: 環境構築と初めてのTS
 
-実際に使って効果の高かったプロンプトテンプレートを公開します。コピペしてそのまま使えます。
+### 前提: JavaScriptの基礎
 
-### 基本テンプレート
+TypeScript は JavaScript の**スーパーセット**（JavaScript にさらに機能を足したもの）です。つまり、**JavaScript が書けなければ TypeScript も書けません**。
 
-${CB}markdown
-# タスク: [機能名の追加 / 修正]
+最低限、以下のJavaScript知識が必要です。
 
-## 🎯 ゴール
+- 変数（const / let）
+- データ型（string / number / boolean / array / object）
+- 関数（アロー関数含む）
+- 配列メソッド（map / filter）
+- 分割代入・スプレッド構文
+- モジュール（import / export）
+- Promise / async / await
 
-[1〜2文で達成事項を記述]
+不安な方は、前記事の **「完全未経験からWebエンジニアになるロードマップ」** の Phase 1 を先に完了してください。
 
-## 📂 前提条件
+### 動かし方の選択肢
 
-- 既存ファイル: [パス]
-- 依存するPhase: [もしあれば]
+TypeScriptを試す環境は3つあります。
 
-## 🔍 事前調査タスク（実装前に必ず実施）
+| 環境 | 難易度 | 用途 |
+|---|---|---|
+| **TypeScript Playground** | ★ | ブラウザで即試せる |
+| **ローカル環境（tsc）** | ★★ | 単体ファイルで学習 |
+| **Vite + Vue/React** | ★★★ | 実践的な開発環境 |
 
-以下を調査して報告すること：
+### おすすめ: TypeScript Playground
 
-1. [調査項目1]
-2. [調査項目2]
+最初は **https://www.typescriptlang.org/play** が最強。ブラウザで開くだけで TypeScript が書けて、即座にコンパイル結果とエラーが見られます。インストール不要。
 
-**調査結果を報告した上で実装方針を擦り合わせてから着手すること**。
-不明点があれば推測せず質問する。
+### ローカル環境の構築
 
-## 📦 必要なパッケージ
+本格的に学ぶならローカル環境を用意しましょう。
 
 ${CB3}bash
-npm install [パッケージ名]
+# プロジェクト作成
+mkdir ts-lesson
+cd ts-lesson
+npm init -y
+
+# TypeScriptインストール
+npm install -D typescript tsx
+
+# 設定ファイル生成
+npx tsc --init
 ${CB3}
 
-## 📐 制約事項（必ず守ること）
+\`hello.ts\` を作成：
 
-1. [既存UI・規約を壊さない]
-2. TypeScript strict モード、any 禁止
-3. [プロジェクト固有の制約]
-
-## 📁 作成・変更するファイル
-
-### 1. \`path/to/file.ts\`（新規/修正）
-
-#### 仕様
-
-[関数シグネチャ・挙動の詳細]
-
-## ✅ 受け入れ基準
-
-- [ ] \`tsc --noEmit\` エラーなし
-- [ ] [具体的な動作テスト項目]
-- [ ] 既存機能が壊れていない
-
-## 🚫 やらないこと（スコープ外）
-
-- [他Phaseに回すもの]
-
-## 💬 完了報告のフォーマット
-
-1. 作成/変更したファイルのパス
-2. 型チェック結果
-3. 確認済みのテスト項目番号
-4. 次Phase への申し送り事項
-${CB}
-
-### 使い方のコツ
-
-このテンプレートを埋めるとき、筆者は以下の順序で書きます：
-
-1. **ゴール** を先に書く（迷ったらここに戻る）
-2. **受け入れ基準** を書く（完了条件を先に決める）
-3. **やらないこと** を書く（スコープを明確化）
-4. **制約事項** を書く（失敗の芽を摘む）
-5. **ファイル仕様** を詳細に書く
-6. 最後に **事前調査** を書く
-
-**受け入れ基準を先に書く**のがポイント。TDD（テスト駆動開発）のマインドセットで、「何ができれば完了か」を最初に定義すると、仕様がブレません。
-
-## AIDLC のアンチパターン
-
-逆に、やってはいけないアンチパターンも共有します。
-
-### ❌ アンチパターン1: プロンプトの短文化
-
-${CB3}
-👤「太字ボタン追加して」
+${CB3}ts
+const message: string = 'Hello, TypeScript!'
+console.log(message)
 ${CB3}
 
-短いプロンプトは一見効率的ですが、AIは**過去の汎用知識**で埋めようとします。その結果、既存コードと整合しない実装が生まれます。
+実行：
 
-**対策**: たとえ小さなタスクでも、最低限「ファイルパス」「既存規約」「受け入れ基準」の3点は書く。
-
-### ❌ アンチパターン2: 動作確認を飛ばす
-
-Phase 1 → Phase 2 → Phase 3 と**連続してAIに投げ続ける**と、Phase 1 のバグが Phase 3 まで伝播し、どこで壊れたか特定できなくなります。
-
-**対策**: 各Phase完了後、**必ず人間が手動動作確認**してコミット。問題があればそのPhase内で解決する。
-
-### ❌ アンチパターン3: 「直して」の繰り返し
-
-バグ修正を依頼する際、「直して」だけでは改善しません。
-
-${CB3}
-❌ 悪い例:
-👤「動かない、直して」
-
-✅ 良い例:
-👤「Cmd+B を押すと挿入されるはずの **太字** が \`太字**\` になっています。
-  before と after の挿入位置が逆転していると推測されます。
-  editorCommands.ts の wrap 関数の dispatch 部分を確認してください」
+${CB3}bash
+npx tsx hello.ts
 ${CB3}
 
-**再現手順・期待結果・仮説**の3点セットで伝えると、修正精度が跳ね上がります。
+### VS Code の設定
 
-### ❌ アンチパターン4: 拡張しすぎた受け入れ基準
+VS Code は **標準でTypeScriptに完全対応**しています。特別な設定は不要ですが、以下の拡張機能があると便利。
 
-「全部動くこと」を受け入れ基準にすると、**何が完了かわからなくなります**。
+- **Error Lens**: エラーをコード上に直接表示
+- **Prettier**: コード整形
+- **ESLint**: コード品質チェック
 
-**対策**: 受け入れ基準は**今回のPhaseのスコープに限定**。他Phaseの機能チェックは別途やる。
+## Step 2: 基本の型
 
-## まとめ
+### プリミティブ型
 
-AIDLC は「AIに丸投げする開発」ではありません。**人間の責任領域が設計・監督・品質保証にシフトした開発スタイル**です。
+#### string / number / boolean
 
-本記事で紹介した5原則を再掲します：
+${CB3}ts
+const name: string = 'Taro'
+const age: number = 25
+const isActive: boolean = true
+${CB3}
 
-1. **Phase分割する**: 1 Phase = AI作業1〜2時間の粒度
-2. **依存関係を明示する**: 各Phaseの前提条件を冒頭に書く
-3. **事前調査を必須化する**: 推測実装を防ぐ最強の処方箋
-4. **スコープ外を明記する**: 「絶対に」「一切」で親切心を封じる
-5. **受け入れ基準を数値化する**: チェックリストで完了を定義
+#### null / undefined
 
-この5原則を守るだけで、AIコーディングの成功率と品質が劇的に向上します。
+${CB3}ts
+const empty: null = null
+const notDefined: undefined = undefined
+${CB3}
 
-> [!NOTE]
-> 本記事で紹介したMarkdownエディタは、4つのPhaseを経て完成しました。各Phaseの所要時間は、AIの作業が1〜2時間、人間のレビュー・動作確認が30分〜1時間程度。**合計で10〜12時間のAI作業 + 4時間のレビュー**で、Notion級のエディタが完成したことになります。
+### 配列
 
-### AIDLC 時代のエンジニアに求められるもの
+${CB3}ts
+// 2つの書き方（どちらも同じ）
+const numbers: number[] = [1, 2, 3]
+const names: Array<string> = ['Taro', 'Hanako']
 
-最後に、AIDLC 時代に価値が高まるスキルを列挙して締めくくります。
+// 複数の型が混ざる場合
+const mixed: (string | number)[] = [1, 'two', 3]
+${CB3}
 
-- **要件を構造化する力**: AIに伝わる形で仕様を分解・言語化
-- **アーキテクチャ判断力**: Phase分割、依存関係の設計
-- **既存コードを読む力**: AIに渡すコンテキストの取捨選択
-- **受け入れ基準を定義する力**: 何ができれば完了か、先に決める
-- **レビュー眼力**: AIの出力の妥当性を即座に判断
+### オブジェクト
 
-コードを書く速度が10倍になる時代において、**「何を作るべきか」「どう進めるべきか」を決める上流スキル**こそが、エンジニアの差別化要因になります。
+${CB3}ts
+const user: { name: string; age: number } = {
+  name: 'Taro',
+  age: 25,
+}
+${CB3}
 
-AIDLC は、エンジニアの仕事を奪うものではなく、**エンジニアの時間を本質的な思考に集中させる**ための手法です。ぜひ、あなたのプロジェクトでも試してみてください。
+オブジェクトの型は長くなりがちなので、後述の「**型エイリアス**」でまとめて名前を付けます。
 
----
+### 型推論
 
-### 参考
+実は、多くの場合 **型を書かなくてもTypeScriptが推測してくれます**。
 
-- 本記事で紹介したプロンプトテンプレートは、自由にコピー・改変して利用いただけます
-- Phase 1〜4 の詳細プロンプトや実装結果は、別記事で公開予定です
+${CB3}ts
+const name = 'Taro'  // string と推論される
+const age = 25       // number と推論される
+
+name.toUpperCase()  // OK（string のメソッド）
+age.toUpperCase()   // ❌ エラー（number にはない）
+${CB3}
+
+> [!TIP]
+> **型を毎回書く必要はありません**。変数の初期値から推論できる場合は省略してOK。逆に、**関数の引数と戻り値、外部から来るデータ**には明示的に型を書くのが鉄則です。
+
+### リテラル型
+
+**「特定の値だけ」** を型にできます。
+
+${CB3}ts
+let status: 'success' | 'error' | 'loading'
+status = 'success'  // OK
+status = 'failed'   // ❌ エラー
+${CB3}
+
+これは後述の **ユニオン型** の応用で、実務で死ぬほど使います。
+
+### any と unknown
+
+**\`any\` は TypeScript の禁じ手**。何でも代入可能で、型チェックを無効化します。
+
+${CB3}ts
+let value: any = 10
+value = 'hello'
+value = { foo: 'bar' }
+value.nonExistent.foo  // エラーにならない（危険）
+${CB3}
+
+代わりに **\`unknown\`** を使います。これは「何が入るか分からないが、使う前に型を絞り込む必要がある」という安全な any です。
+
+${CB3}ts
+let value: unknown = 10
+// value.toString()  // ❌ エラー
+
+if (typeof value === 'number') {
+  value.toFixed(2)  // OK
+}
+${CB3}
+
+> [!WARNING]
+> **\`any\` を使ったらTypeScriptを使う意味がありません**。初学者が詰まった時に \`any\` で逃げる癖がつくと、成長が止まります。困ったら \`unknown\` を使うか、型を正しく書く努力をしましょう。
+
+## Step 3: 関数と型
+
+### 引数と戻り値の型
+
+${CB3}ts
+function add(a: number, b: number): number {
+  return a + b
+}
+
+// アロー関数
+const multiply = (a: number, b: number): number => a * b
+${CB3}
+
+### 戻り値が void
+
+何も返さない関数。
+
+${CB3}ts
+function logMessage(msg: string): void {
+  console.log(msg)
+}
+${CB3}
+
+### オプショナル引数
+
+\`?\` を付けると省略可能。
+
+${CB3}ts
+function greet(name: string, title?: string): string {
+  if (title) {
+    return \`Hello, \${title} \${name}\`
+  }
+  return \`Hello, \${name}\`
+}
+
+greet('Taro')         // OK
+greet('Taro', 'Dr.')  // OK
+${CB3}
+
+### デフォルト引数
+
+${CB3}ts
+function greet(name: string, title: string = 'Mr.'): string {
+  return \`Hello, \${title} \${name}\`
+}
+${CB3}
+
+### 関数型
+
+変数に関数を代入する時、関数そのものの型を書けます。
+
+${CB3}ts
+const add: (a: number, b: number) => number = (a, b) => a + b
+${CB3}
+
+コールバック関数の型指定で特に役立ちます。
+
+${CB3}ts
+function processNumbers(nums: number[], callback: (n: number) => number): number[] {
+  return nums.map(callback)
+}
+
+processNumbers([1, 2, 3], n => n * 2)  // [2, 4, 6]
+${CB3}
+
+## Step 4: 型エイリアスとインターフェース
+
+### 型エイリアス (\`type\`)
+
+**型に名前を付ける**仕組み。
+
+${CB3}ts
+type User = {
+  id: number
+  name: string
+  email: string
+  isAdmin: boolean
+}
+
+const user: User = {
+  id: 1,
+  name: 'Taro',
+  email: 'taro@example.com',
+  isAdmin: false,
+}
+${CB3}
+
+関数の引数にも使えます。
+
+${CB3}ts
+function createUser(user: User): void {
+  console.log(\`Created: \${user.name}\`)
+}
+${CB3}
+
+### インターフェース (\`interface\`)
+
+\`type\` とほぼ同じ機能。
+
+${CB3}ts
+interface User {
+  id: number
+  name: string
+  email: string
+  isAdmin: boolean
+}
+${CB3}
+
+### \`type\` と \`interface\` の使い分け
+
+| 観点 | \`type\` | \`interface\` |
+|---|---|---|
+| オブジェクト定義 | ⭕ | ⭕ |
+| ユニオン型 | ⭕ | ❌ |
+| 拡張（継承） | \`&\` で合成 | \`extends\` |
+| 同名再定義 | ❌ エラー | ⭕ マージ |
+
+**迷ったら \`type\`** を使う方針で問題ありません。React / Vue 界隈では \`type\` がやや主流です。
+
+### プロパティのオプショナル
+
+${CB3}ts
+type User = {
+  id: number
+  name: string
+  email?: string  // 省略可能
+}
+
+const user1: User = { id: 1, name: 'Taro' }                           // OK
+const user2: User = { id: 2, name: 'Hanako', email: 'h@test.com' }    // OK
+${CB3}
+
+### 読み取り専用
+
+${CB3}ts
+type User = {
+  readonly id: number
+  name: string
+}
+
+const user: User = { id: 1, name: 'Taro' }
+user.name = 'Hanako'  // OK
+user.id = 2           // ❌ エラー（読み取り専用）
+${CB3}
+
+### ネストした型
+
+${CB3}ts
+type Address = {
+  city: string
+  zip: string
+}
+
+type User = {
+  id: number
+  name: string
+  address: Address
+}
+${CB3}
+
+## Step 5: 実践で使う応用型
+
+### ユニオン型 — 「A または B」
+
+${CB3}ts
+type ID = string | number
+
+function printId(id: ID): void {
+  console.log(id)
+}
+
+printId(123)       // OK
+printId('abc123')  // OK
+printId(true)      // ❌ エラー
+${CB3}
+
+API レスポンスや状態管理で超頻出。
+
+${CB3}ts
+type Status = 'idle' | 'loading' | 'success' | 'error'
+
+let currentStatus: Status = 'idle'
+${CB3}
+
+### 型の絞り込み
+
+ユニオン型は、**条件分岐で型が絞り込まれます**。
+
+${CB3}ts
+function formatValue(value: string | number): string {
+  if (typeof value === 'string') {
+    return value.toUpperCase()  // この中では string として扱える
+  }
+  return value.toFixed(2)       // この中では number として扱える
+}
+${CB3}
+
+### インターセクション型 — 「A かつ B」
+
+${CB3}ts
+type WithId = { id: number }
+type WithName = { name: string }
+
+type User = WithId & WithName  // { id: number; name: string }
+${CB3}
+
+### ジェネリクス — 型を引数にする
+
+**同じロジックを様々な型で使い回したい**時に使います。
+
+${CB3}ts
+// 配列の最初の要素を返す関数
+function first<T>(arr: T[]): T | undefined {
+  return arr[0]
+}
+
+first([1, 2, 3])             // number | undefined
+first(['a', 'b', 'c'])       // string | undefined
+first([{ id: 1 }, { id: 2 }]) // { id: number } | undefined
+${CB3}
+
+\`<T>\` が「型の引数」。呼び出し時の実際の型に置き換わります。
+
+#### よく使うジェネリクスの例
+
+${CB3}ts
+// API レスポンスの型
+type ApiResponse<T> = {
+  data: T
+  status: number
+  message: string
+}
+
+const userResponse: ApiResponse<User> = {
+  data: { id: 1, name: 'Taro', email: 'taro@test.com', isAdmin: false },
+  status: 200,
+  message: 'OK',
+}
+${CB3}
+
+### ユーティリティ型
+
+TypeScriptには**便利な組み込み型**が多数あります。頻出の5つ。
+
+#### \`Partial<T>\` — 全プロパティをオプショナルに
+
+${CB3}ts
+type User = { id: number; name: string; email: string }
+
+// 部分更新のために使う
+function updateUser(id: number, updates: Partial<User>): void {
+  // updates は { id?, name?, email? } 全部オプショナル
+}
+
+updateUser(1, { name: 'Hanako' })  // OK
+${CB3}
+
+#### \`Required<T>\` — 全プロパティを必須に
+
+${CB3}ts
+type User = { id?: number; name?: string }
+type StrictUser = Required<User>  // { id: number; name: string }
+${CB3}
+
+#### \`Pick<T, K>\` — 一部プロパティだけ抜き出す
+
+${CB3}ts
+type User = { id: number; name: string; email: string; password: string }
+type PublicUser = Pick<User, 'id' | 'name'>  // { id: number; name: string }
+${CB3}
+
+#### \`Omit<T, K>\` — 一部プロパティを除く
+
+${CB3}ts
+type User = { id: number; name: string; email: string; password: string }
+type SafeUser = Omit<User, 'password'>  // password 以外の全プロパティ
+${CB3}
+
+#### \`Record<K, V>\` — キーと値の型でオブジェクトを定義
+
+${CB3}ts
+type StatusMessages = Record<'success' | 'error' | 'loading', string>
+
+const messages: StatusMessages = {
+  success: 'OK',
+  error: 'Failed',
+  loading: 'Please wait...',
+}
+${CB3}
+
+> [!TIP]
+> ユーティリティ型は**最初から全部覚える必要はない**。\`Partial\` \`Pick\` \`Omit\` の3つを覚えて、必要に応じて他を調べる形で十分です。
+
+### \`as const\` と \`as\`
+
+#### \`as const\` — リテラル型で固定
+
+${CB3}ts
+const colors = ['red', 'green', 'blue'] as const
+// readonly ['red', 'green', 'blue'] 型になる
+
+type Color = typeof colors[number]  // 'red' | 'green' | 'blue'
+${CB3}
+
+#### \`as\` — 型アサーション（要注意）
+
+${CB3}ts
+const input = document.getElementById('myInput') as HTMLInputElement
+input.value  // HTMLInputElement として扱える
+${CB3}
+
+> [!WARNING]
+> \`as\` は**型チェックを強制的にねじ曲げる**機能です。間違った型に変換してもエラーにならないので、**本当に必要な時だけ使う**。乱用は \`any\` と同じ悪手です。
+
+## Step 6: フレームワークでの実践
+
+### Vue 3 + TypeScript
+
+Vue プロジェクトを TypeScript で作成：
+
+${CB3}bash
+npm create vue@latest
+# TypeScript を Yes にする
+${CB3}
+
+#### \`<script setup lang="ts">\`
+
+${CB3}vue
+<script setup lang="ts">
+import { ref } from 'vue'
+
+// ref に型を明示
+const count = ref<number>(0)
+const message = ref<string>('')
+
+// オブジェクトの型
+type User = {
+  id: number
+  name: string
+}
+
+const users = ref<User[]>([])
+</script>
+${CB3}
+
+#### Props に型を付ける
+
+${CB3}vue
+<script setup lang="ts">
+// 型だけ指定する defineProps
+const props = defineProps<{
+  name: string
+  age: number
+  isAdmin?: boolean
+}>()
+</script>
+${CB3}
+
+#### Emit に型を付ける
+
+${CB3}vue
+<script setup lang="ts">
+const emit = defineEmits<{
+  update: [value: string]
+  delete: [id: number]
+}>()
+</script>
+${CB3}
+
+### React + TypeScript
+
+Vite で作成：
+
+${CB3}bash
+npm create vite@latest my-app -- --template react-ts
+${CB3}
+
+#### コンポーネントの型
+
+${CB3}tsx
+type ButtonProps = {
+  label: string
+  onClick: () => void
+  disabled?: boolean
+}
+
+const Button = ({ label, onClick, disabled = false }: ButtonProps) => {
+  return (
+    <button onClick={onClick} disabled={disabled}>
+      {label}
+    </button>
+  )
+}
+${CB3}
+
+#### useState に型を付ける
+
+${CB3}tsx
+import { useState } from 'react'
+
+const [count, setCount] = useState<number>(0)
+const [user, setUser] = useState<User | null>(null)
+${CB3}
+
+### API レスポンスの型
+
+実務で最もTypeScriptが活きる場面。
+
+${CB3}ts
+type User = {
+  id: number
+  name: string
+  email: string
+}
+
+async function fetchUser(id: number): Promise<User> {
+  const response = await fetch(\`/api/users/\${id}\`)
+  const data: User = await response.json()
+  return data
+}
+
+// 使う側では補完が効く
+const user = await fetchUser(1)
+console.log(user.name)  // ✅ 補完が効く
+console.log(user.phone) // ❌ 存在しないプロパティ
+${CB3}
+
+> [!IMPORTANT]
+> **API レスポンスの型は信頼できない**ことに注意。サーバが想定外の形で返してきてもTSはエラーにしません。本番運用では **zod** などのバリデーションライブラリで実行時チェックすることが推奨されます。
+
+## つまずきポイントと対処法
+
+### つまずき1: エラーメッセージが長すぎて読めない
+
+${CB3}
+Argument of type '{ name: string; age: "25"; }' is not assignable to parameter of type 'User'.
+  Types of property 'age' are incompatible.
+    Type 'string' is not assignable to type 'number'.
+${CB3}
+
+**対処**: エラーは**下から読む**。最後の行が最も具体的な原因を示していることが多い。
+
+### つまずき2: \`any\` に逃げたくなる
+
+**対処**: まず \`unknown\` を使う。それでも型が分からない時は\`zod\`などで実行時チェック。「一時的に\`any\`」は永続化するので注意。
+
+### つまずき3: \`Object is possibly 'null'\`
+
+${CB3}ts
+const el = document.getElementById('myInput')
+el.value  // ❌ Object is possibly 'null'
+${CB3}
+
+**対処**:
+
+${CB3}ts
+// 方法1: null チェック
+if (el) {
+  el.value
+}
+
+// 方法2: オプショナルチェーン
+el?.value
+
+// 方法3: 非null アサーション（使用注意）
+el!.value
+${CB3}
+
+### つまずき4: 型が複雑すぎて書けない
+
+**対処**: 一旦 \`unknown\` や \`any\` で動かして、**後から型を書く**のもアリ。完璧を目指さず段階的に。
+
+### つまずき5: \`tsconfig.json\` が何か分からない
+
+**対処**: 最初は触らなくてOK。\`strict: true\` だけ確認してください。これが厳格モードをONにする設定で、**最初から厳しい方が学習効率が良い**です。
+
+## 実践課題: 型付きTODOアプリ
+
+Vue 3 記事で作った TODO アプリを **TypeScript でリライト**しましょう。
+
+### 実装ポイント
+
+${CB3}ts
+// 型定義
+type Todo = {
+  id: string
+  title: string
+  completed: boolean
+  createdAt: Date
+}
+
+type Filter = 'all' | 'active' | 'completed'
+
+// 関数の型
+function addTodo(title: string): Todo { /* ... */ }
+function toggleTodo(id: string): void { /* ... */ }
+function filterTodos(todos: Todo[], filter: Filter): Todo[] { /* ... */ }
+${CB3}
+
+型を書いてから実装することで、**APIが明確になる**体験ができます。これがTypeScriptの真の魅力です。
+
+## 学習を加速するTips
+
+### 1. 公式ドキュメントを読む
+
+**TypeScript Handbook（日本語版）** が存在します。https://typescript-jp.gitbook.io/deep-dive/
+
+### 2. \`strict: true\` を常にON
+
+厳格モードで書く習慣を最初からつける。後で緩和は簡単だが、緩くして書いたコードを厳格化するのは地獄。
+
+### 3. 型から考える設計
+
+コードを書く前に「このデータはどんな型か」を考える。設計が自然と綺麗になります。
+
+### 4. 他人のコードの型を読む
+
+OSSの型定義（\`@types/xxx\`）を読むと、プロの型設計が学べます。
+
+### 5. Playgroundで小さく実験
+
+疑問は **TypeScript Playground** で即座に試す。インストール不要で学習速度が最速。
+
+## まとめ: TypeScript への道のり
+
+本記事のロードマップを再掲します。
+
+| Step | 期間 | 内容 |
+|---|---|---|
+| 1 | 2日 | 環境構築 |
+| 2 | 3日 | 基本の型 |
+| 3 | 3日 | 関数と型 |
+| 4 | 3日 | 型エイリアス / インターフェース |
+| 5 | 1週間 | ユニオン型・ジェネリクス・ユーティリティ型 |
+| 6 | 2週間 | フレームワーク実践 |
+
+**合計3〜4週間**で、Vue / React プロジェクトで TypeScript を使いこなせるレベルに到達できます。
+
+### 次のステップ
+
+TypeScript の基礎ができたら：
+
+- **zod**: 実行時の型バリデーション
+- **高度な型**: Mapped Types、Conditional Types、Template Literal Types
+- **Node.js + TypeScript**: バックエンドも型で守る
+- **tRPC**: 型安全なAPI通信
+- **Prisma**: 型安全なORM
+
+### 最後に
+
+TypeScript を最初に触ると、「型を書くのが面倒」と感じるかもしれません。しかし2〜3ヶ月使えば、**素のJavaScriptに戻れない体**になります。
+
+**エディタが補完してくれる安心感、リファクタリング時に型が守ってくれる信頼感、コードがそのままドキュメントになる便利さ**——これを体験すると、「TypeScriptで書くのが標準、たまに学習用にJSを書く」という感覚に変わります。
+
+2026年現在、フロントエンドの実務は TypeScript 一色です。この記事がその第一歩を確実にするものになれば幸いです。
+
+### 参考リソース
+
+- **TypeScript 公式ドキュメント**: https://www.typescriptlang.org/docs/
+- **TypeScript Deep Dive（日本語）**: https://typescript-jp.gitbook.io/deep-dive/
+- **サバイバル TypeScript**: https://typescriptbook.jp/
+- **TypeScript Playground**: https://www.typescriptlang.org/play
+- **type-challenges**（GitHub）: 型パズルで腕試し
 `;
 
 async function main() {
@@ -479,10 +845,10 @@ async function main() {
       id: articleId,
       tenantId: TENANT_ID,
       title:
-        'AIエージェントにMarkdownエディタを作らせた話 — AIDLCの進め方を徹底解説',
+        'マークアップ言語を習得した人のためのTypeScript基礎 — 型で守る堅牢なフロントエンド開発',
       content,
       status: 'published',
-      slug: 'aidlc-practical-guide',
+      slug: 'typescript-basics-for-markup-learners',
       authorId: AUTHOR_ID,
       viewCount: 0,
       likeCount: 0,
