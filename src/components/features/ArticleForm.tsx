@@ -1,16 +1,14 @@
 'use client';
 
 import { useState, useTransition, useCallback } from 'react';
-import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MediaLibrary } from '@/components/features/MediaLibrary';
+import { RichMarkdownEditor } from '@/components/features/RichMarkdownEditor';
 import { uploadImage } from '@/presentation/actions/uploadImage';
-
-const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 const articleFormSchema = z.object({
   title: z
@@ -179,53 +177,32 @@ export function ArticleForm({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="content">本文</Label>
+          <button
+            type="button"
+            onClick={() => setMediaOpen(true)}
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1 rounded text-xs transition-colors"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <rect x="1" y="3" width="18" height="14" rx="2" />
+              <circle cx="6.5" cy="8.5" r="1.5" />
+              <path d="M1 14l5-5 3 3 3-3 7 7" />
+            </svg>
+            メディア挿入
+          </button>
         </div>
-        <div onDrop={handleDrop} onDragOver={(e) => e.preventDefault()}>
-          <MDEditor
-            value={content}
-            onChange={(val) => setContent(val ?? '')}
-            height={400}
-            commands={[
-              ...require('@uiw/react-md-editor')
-                .commands.getCommands()
-                .filter((cmd: { name?: string }) => cmd.name !== 'image'),
-              {
-                name: 'image',
-                keyCommand: 'image',
-                buttonProps: {
-                  'aria-label': 'メディアライブラリから画像を挿入',
-                },
-                icon: (
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <rect
-                      x="1"
-                      y="3"
-                      width="18"
-                      height="14"
-                      rx="2"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <circle cx="6.5" cy="8.5" r="1.5" />
-                    <path
-                      d="M1 14l5-5 3 3 3-3 7 7"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                  </svg>
-                ),
-                execute: () => setMediaOpen(true),
-              },
-            ]}
-          />
-        </div>
+        <RichMarkdownEditor
+          value={content}
+          onChange={setContent}
+          onDrop={handleDrop}
+          height={500}
+        />
         {errors.content && (
           <p role="alert" className="text-destructive text-sm">
             {errors.content}
