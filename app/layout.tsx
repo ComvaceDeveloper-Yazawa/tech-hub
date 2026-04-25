@@ -12,7 +12,8 @@ export const metadata: Metadata = {
   title: 'YazawaBlog',
   description: 'Technical blog platform',
   icons: {
-    icon: '/favicon.svg',
+    icon: '/wolf-icon.jpeg',
+    apple: '/wolf-icon.jpeg',
   },
 };
 

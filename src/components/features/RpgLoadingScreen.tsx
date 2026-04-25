@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useLoading } from '@/contexts/loading/LoadingContext';
 
 const LOADING_MESSAGES = [
@@ -121,11 +122,11 @@ export function RpgLoadingScreen() {
               height: '3px',
               background:
                 i % 3 === 0 ? '#00d4ff' : i % 3 === 1 ? '#7c3aed' : '#ffffff',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              opacity: Math.random() * 0.6 + 0.2,
-              animation: `float-particle ${Math.random() * 4 + 3}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 3}s`,
+              top: `${(i * 37 + 11) % 100}%`,
+              left: `${(i * 53 + 7) % 100}%`,
+              opacity: 0.4,
+              animation: `float-particle ${3 + (i % 4)}s ease-in-out infinite`,
+              animationDelay: `${(i % 3) * 0.8}s`,
             }}
           />
         ))}
@@ -137,16 +138,16 @@ export function RpgLoadingScreen() {
         <div className="relative flex items-center justify-center">
           {/* 外側グローリング */}
           <div
-            className="absolute h-52 w-52 rounded-full"
+            className="absolute h-56 w-56 rounded-full"
             style={{
               background:
-                'radial-gradient(circle, transparent 45%, rgba(0,212,255,0.08) 60%, transparent 75%)',
+                'radial-gradient(circle, transparent 40%, rgba(0,212,255,0.12) 60%, transparent 75%)',
               animation: 'pulse-ring 3s ease-in-out infinite',
             }}
           />
           {/* 回転する点線リング */}
           <div
-            className="absolute h-44 w-44 rounded-full"
+            className="absolute h-48 w-48 rounded-full"
             style={{
               border: '1px dashed rgba(0,212,255,0.4)',
               animation: 'spin-slow 12s linear infinite',
@@ -154,7 +155,7 @@ export function RpgLoadingScreen() {
           />
           {/* 逆回転リング */}
           <div
-            className="absolute h-36 w-36 rounded-full"
+            className="absolute h-40 w-40 rounded-full"
             style={{
               border: '1px solid rgba(124,58,237,0.5)',
               animation: 'spin-slow 8s linear infinite reverse',
@@ -162,123 +163,22 @@ export function RpgLoadingScreen() {
             }}
           />
 
-          {/* ウルフSVGアイコン */}
+          {/* ウルフ画像 */}
           <div
-            className="relative z-10 flex h-28 w-28 items-center justify-center rounded-full"
+            className="relative z-10 h-32 w-32 overflow-hidden rounded-full"
             style={{
-              background:
-                'radial-gradient(circle at 40% 35%, #1a1a3e 0%, #0a0a1a 100%)',
-              border: '2px solid rgba(0,212,255,0.6)',
               boxShadow:
-                '0 0 30px rgba(0,212,255,0.4), inset 0 0 20px rgba(0,212,255,0.05)',
+                '0 0 40px rgba(0,212,255,0.5), 0 0 80px rgba(0,212,255,0.2)',
             }}
           >
-            <svg
-              viewBox="0 0 100 100"
-              className="h-20 w-20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* 耳（左） */}
-              <polygon
-                points="22,48 15,20 35,38"
-                fill="#1a1a3e"
-                stroke="#00d4ff"
-                strokeWidth="1.5"
-              />
-              {/* 耳（右） */}
-              <polygon
-                points="78,48 85,20 65,38"
-                fill="#1a1a3e"
-                stroke="#00d4ff"
-                strokeWidth="1.5"
-              />
-              {/* 頭部シルエット */}
-              <ellipse
-                cx="50"
-                cy="55"
-                rx="28"
-                ry="26"
-                fill="#12122a"
-                stroke="#00d4ff"
-                strokeWidth="1.5"
-              />
-              {/* 鼻筋 */}
-              <path
-                d="M 50 42 L 50 65"
-                stroke="rgba(0,212,255,0.3)"
-                strokeWidth="1"
-              />
-              {/* 目（左）- サイバー風 */}
-              <ellipse
-                cx="38"
-                cy="52"
-                rx="5"
-                ry="4"
-                fill="#0a0a1a"
-                stroke="#00d4ff"
-                strokeWidth="1.5"
-              />
-              <ellipse
-                cx="38"
-                cy="52"
-                rx="2.5"
-                ry="2.5"
-                fill="#00d4ff"
-                style={{ filter: 'blur(0.5px)' }}
-              />
-              <ellipse cx="38" cy="52" rx="1" ry="1" fill="white" />
-              {/* 目（右）- サイバー風 */}
-              <ellipse
-                cx="62"
-                cy="52"
-                rx="5"
-                ry="4"
-                fill="#0a0a1a"
-                stroke="#00d4ff"
-                strokeWidth="1.5"
-              />
-              <ellipse
-                cx="62"
-                cy="52"
-                rx="2.5"
-                ry="2.5"
-                fill="#00d4ff"
-                style={{ filter: 'blur(0.5px)' }}
-              />
-              <ellipse cx="62" cy="52" rx="1" ry="1" fill="white" />
-              {/* 鼻 */}
-              <ellipse cx="50" cy="65" rx="4" ry="2.5" fill="#7c3aed" />
-              {/* 口 */}
-              <path
-                d="M 44 68 Q 50 73 56 68"
-                fill="none"
-                stroke="rgba(0,212,255,0.5)"
-                strokeWidth="1.2"
-              />
-              {/* 回路ライン（額） */}
-              <path
-                d="M 35 44 L 30 40 L 25 40"
-                fill="none"
-                stroke="rgba(0,212,255,0.4)"
-                strokeWidth="0.8"
-              />
-              <path
-                d="M 65 44 L 70 40 L 75 40"
-                fill="none"
-                stroke="rgba(0,212,255,0.4)"
-                strokeWidth="0.8"
-              />
-              <circle cx="25" cy="40" r="1.5" fill="rgba(0,212,255,0.6)" />
-              <circle cx="75" cy="40" r="1.5" fill="rgba(0,212,255,0.6)" />
-              {/* 額の回路 */}
-              <path
-                d="M 42 46 L 42 42 L 58 42 L 58 46"
-                fill="none"
-                stroke="rgba(124,58,237,0.5)"
-                strokeWidth="0.8"
-              />
-              <circle cx="50" cy="42" r="1.5" fill="rgba(124,58,237,0.7)" />
-            </svg>
+            <Image
+              src="/wolf-icon.jpeg"
+              alt="Tech Hub"
+              width={128}
+              height={128}
+              className="h-full w-full object-cover"
+              priority
+            />
           </div>
 
           {/* コーナーの光点 */}
@@ -291,7 +191,7 @@ export function RpgLoadingScreen() {
                 boxShadow: '0 0 8px #00d4ff',
                 top: '50%',
                 left: '50%',
-                transform: `rotate(${angle}deg) translateY(-88px)`,
+                transform: `rotate(${angle}deg) translateY(-96px)`,
                 transformOrigin: '0 0',
                 animation: `blink ${1 + angle / 180}s ease-in-out infinite`,
               }}
@@ -310,7 +210,6 @@ export function RpgLoadingScreen() {
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
               animation: 'gradient-shift 3s ease-in-out infinite',
-              textShadow: 'none',
             }}
           >
             Tech Hub
