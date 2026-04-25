@@ -11,6 +11,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { LogoutButton } from '@/components/features/LogoutButton';
 
 interface MobileNavProps {
   isAuthenticated: boolean;
@@ -60,6 +61,9 @@ export function MobileNav({ isAuthenticated }: MobileNavProps) {
                 >
                   管理
                 </Link>
+                <div className="px-2 py-2">
+                  <LogoutButton />
+                </div>
               </>
             ) : (
               <Link

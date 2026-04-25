@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { MobileNav } from '@/components/features/MobileNav';
+import { LogoutButton } from '@/components/features/LogoutButton';
 
 export async function Header() {
   const supabase = await createClient();
@@ -44,6 +45,7 @@ export async function Header() {
               >
                 管理
               </Link>
+              <LogoutButton />
             </>
           ) : (
             <Link
