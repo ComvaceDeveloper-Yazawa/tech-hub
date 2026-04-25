@@ -15,32 +15,50 @@ export interface MediaItem {
 export async function listMedia(folder?: string): Promise<MediaItem[]> {
   const supabase = await createClient();
   const tenantId = TenantId.personal().toString();
-  const prefix = folder ? `${tenantId}/${folder}` : tenantId;
+
+  // Supabase Storage の list() に渡すプレフィックス
+  // ルートは tenantId、サブフォルダは tenantId/folder
+  const listPath = folder ? `${tenantId}/${folder}` : tenantId;
 
   const { data, error } = await supabase.storage
     .from('article-images')
-    .list(prefix, { sortBy: { column: 'created_at', order: 'desc' } });
+    .list(listPath, {
+      limit: 200,
+      sortBy: { column: 'created_at', order: 'desc' },
+    });
 
   if (error) {
     throw new Error(`メディア一覧の取得に失敗しました: ${error.message}`);
   }
 
-  return (data ?? []).map((item) => {
+  const items: MediaItem[] = [];
+
+  for (const item of data ?? []) {
+    // .gitkeep は非表示
+    if (item.name === '.gitkeep') continue;
+
+    // metadata が null = フォルダ
+    const isFolder = item.metadata === null;
     const itemPath = folder ? `${folder}/${item.name}` : item.name;
     const storagePath = `${tenantId}/${itemPath}`;
-    const isFolder = item.id === null;
 
-    const { data: urlData } = supabase.storage
-      .from('article-images')
-      .getPublicUrl(storagePath);
+    let url = '';
+    if (!isFolder) {
+      const { data: urlData } = supabase.storage
+        .from('article-images')
+        .getPublicUrl(storagePath);
+      url = urlData.publicUrl;
+    }
 
-    return {
+    items.push({
       name: item.name,
       path: itemPath,
-      url: isFolder ? '' : urlData.publicUrl,
-      size: item.metadata?.size ?? 0,
+      url,
+      size: (item.metadata as { size?: number } | null)?.size ?? 0,
       createdAt: item.created_at ?? '',
       isFolder,
-    };
-  });
+    });
+  }
+
+  return items;
 }

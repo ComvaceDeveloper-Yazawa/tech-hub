@@ -90,10 +90,10 @@ export function MediaLibrary({ onSelect, onClose }: MediaLibraryProps) {
 
   const handleCreateFolder = () => {
     if (!newFolder.trim()) return;
-    // Supabase Storage はフォルダを .gitkeep で作成
     const formData = new FormData();
     const placeholder = new File([''], '.gitkeep', { type: 'text/plain' });
     formData.append('file', placeholder);
+    formData.append('placeholder', 'true');
     formData.append(
       'folder',
       currentFolder ? `${currentFolder}/${newFolder.trim()}` : newFolder.trim()

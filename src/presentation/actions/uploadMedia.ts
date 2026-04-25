@@ -4,13 +4,15 @@ import { ulid } from 'ulid';
 import { createClient } from '@/lib/supabase/server';
 import { TenantId } from '@/contexts/shared-kernel/TenantId';
 
-const ALLOWED_TYPES = [
+const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
   'image/png',
   'image/gif',
   'image/webp',
 ] as const;
+
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
 const EXTENSION_MAP: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
@@ -23,21 +25,30 @@ export async function uploadMedia(
 ): Promise<{ url: string; path: string }> {
   const file = formData.get('file');
   const folder = formData.get('folder');
+  const isPlaceholder = formData.get('placeholder') === 'true';
   const folderPath =
     typeof folder === 'string' && folder.trim() ? folder.trim() : '';
 
   if (!(file instanceof File)) throw new Error('ファイルが選択されていません');
-  if (!ALLOWED_TYPES.includes(file.type as (typeof ALLOWED_TYPES)[number])) {
-    throw new Error(
-      '対応していないファイル形式です。JPEG, PNG, GIF, WebP のみアップロードできます'
-    );
+
+  // フォルダ作成用プレースホルダーはバリデーションをスキップ
+  if (!isPlaceholder) {
+    if (
+      !ALLOWED_IMAGE_TYPES.includes(
+        file.type as (typeof ALLOWED_IMAGE_TYPES)[number]
+      )
+    ) {
+      throw new Error(
+        '対応していないファイル形式です。JPEG, PNG, GIF, WebP のみアップロードできます'
+      );
+    }
+    if (file.size > MAX_FILE_SIZE)
+      throw new Error('ファイルサイズが5MBを超えています');
   }
-  if (file.size > MAX_FILE_SIZE)
-    throw new Error('ファイルサイズが5MBを超えています');
 
   const tenantId = TenantId.personal().toString();
-  const ext = EXTENSION_MAP[file.type] ?? 'bin';
-  const fileName = `${ulid()}.${ext}`;
+  const ext = isPlaceholder ? 'gitkeep' : (EXTENSION_MAP[file.type] ?? 'bin');
+  const fileName = isPlaceholder ? '.gitkeep' : `${ulid()}.${ext}`;
   const filePath = folderPath
     ? `${tenantId}/${folderPath}/${fileName}`
     : `${tenantId}/${fileName}`;
@@ -45,7 +56,10 @@ export async function uploadMedia(
   const supabase = await createClient();
   const { error } = await supabase.storage
     .from('article-images')
-    .upload(filePath, file, { contentType: file.type, upsert: false });
+    .upload(filePath, file, {
+      contentType: isPlaceholder ? 'text/plain' : file.type,
+      upsert: true,
+    });
 
   if (error) throw new Error(`アップロードに失敗しました: ${error.message}`);
 
