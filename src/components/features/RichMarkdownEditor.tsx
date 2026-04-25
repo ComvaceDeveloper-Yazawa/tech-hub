@@ -18,6 +18,7 @@ import { createImageHandlers } from '@/components/editor/imageHandlers';
 import { createFormatOnPasteHandler } from '@/components/editor/formatOnPasteHandler';
 import { useAutoSave } from '@/components/editor/useAutoSave';
 import { DraftRestoreDialog } from '@/components/editor/DraftRestoreDialog';
+import { MediaLibrary } from '@/components/features/MediaLibrary';
 import { toast } from 'sonner';
 import { EditorState } from '@codemirror/state';
 import type { ReactCodeMirrorRef } from '@uiw/react-codemirror';
@@ -31,12 +32,11 @@ const CodeMirror = dynamic(() => import('@uiw/react-codemirror'), {
   ),
 });
 
-type Tab = 'edit' | 'split' | 'preview' | 'guide';
+type Tab = 'split' | 'preview';
 
 interface RichMarkdownEditorProps {
   value: string;
   onChange: (value: string) => void;
-  onDrop?: (e: React.DragEvent) => void;
   height?: number;
   articleId: string;
 }
@@ -70,92 +70,15 @@ const editorTheme = EditorView.theme({
   },
 });
 
-const MARKDOWN_GUIDE = `
-# Markdown 記法ガイド
-
-## 見出し
-
-\`\`\`
-# 見出し1
-## 見出し2
-### 見出し3
-\`\`\`
-
-## テキスト装飾
-
-| 記法 | 表示 |
-|------|------|
-| \`**太字**\` | **太字** |
-| \`*斜体*\` | *斜体* |
-| \`~~打ち消し~~\` | ~~打ち消し~~ |
-| \`\`インラインコード\`\` | \`インラインコード\` |
-
-## リスト
-
-\`\`\`
-- 箇条書き1
-- 箇条書き2
-  - ネスト
-
-1. 番号付き1
-2. 番号付き2
-\`\`\`
-
-## コードブロック
-
-\`\`\`
-\`\`\`typescript
-const hello = "world";
-console.log(hello);
-\`\`\`
-\`\`\`
-
-## リンク・画像
-
-\`\`\`
-[リンクテキスト](https://example.com)
-![代替テキスト](画像URL)
-\`\`\`
-
-## 引用
-
-\`\`\`
-> 引用テキスト
-> 複数行も可能
-\`\`\`
-
-## 水平線
-
-\`\`\`
----
-\`\`\`
-
-## テーブル
-
-\`\`\`
-| 列1 | 列2 | 列3 |
-|-----|-----|-----|
-| A   | B   | C   |
-| D   | E   | F   |
-\`\`\`
-
-## チェックボックス
-
-\`\`\`
-- [x] 完了タスク
-- [ ] 未完了タスク
-\`\`\`
-`;
-
 export function RichMarkdownEditor({
   value,
   onChange,
-  onDrop,
   height = 500,
   articleId,
 }: RichMarkdownEditorProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('edit');
+  const [activeTab, setActiveTab] = useState<Tab>('split');
   const editorRef = useRef<ReactCodeMirrorRef>(null);
+  const [mediaOpen, setMediaOpen] = useState(false);
 
   // 自動保存
   const {
@@ -195,16 +118,13 @@ export function RichMarkdownEditor({
   const getView = useCallback(() => editorRef.current?.view ?? null, []);
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'edit', label: '✏️ 編集' },
-    { id: 'split', label: '🔀 分割' },
-    { id: 'preview', label: '👁 プレビュー' },
-    { id: 'guide', label: '📖 記法ガイド' },
+    { id: 'split', label: '分割' },
+    { id: 'preview', label: 'プレビュー' },
   ];
 
   return (
     <div
       className="overflow-hidden rounded-lg border border-[#3e4451] shadow-lg"
-      onDrop={activeTab === 'edit' ? onDrop : undefined}
       onDragOver={(e) => e.preventDefault()}
     >
       <DraftRestoreDialog
@@ -271,48 +191,14 @@ export function RichMarkdownEditor({
         </div>
       </div>
 
-      {/* 編集タブ */}
-      {activeTab === 'edit' && (
-        <>
-          <EditorToolbar getView={getView} getFullContent={() => value} />
-          <CodeMirror
-            ref={editorRef}
-            value={value}
-            height={`${height}px`}
-            theme={oneDark}
-            extensions={extensions}
-            onChange={handleChange}
-            basicSetup={{
-              lineNumbers: true,
-              highlightActiveLineGutter: true,
-              highlightSpecialChars: true,
-              foldGutter: true,
-              drawSelection: true,
-              dropCursor: true,
-              allowMultipleSelections: true,
-              indentOnInput: true,
-              syntaxHighlighting: true,
-              bracketMatching: true,
-              closeBrackets: true,
-              autocompletion: false,
-              rectangularSelection: true,
-              crosshairCursor: false,
-              highlightActiveLine: true,
-              highlightSelectionMatches: true,
-              closeBracketsKeymap: true,
-              searchKeymap: true,
-              foldKeymap: true,
-              completionKeymap: false,
-              lintKeymap: false,
-            }}
-          />
-        </>
-      )}
-
       {/* 分割タブ */}
       {activeTab === 'split' && (
         <>
-          <EditorToolbar getView={getView} getFullContent={() => value} />
+          <EditorToolbar
+            getView={getView}
+            getFullContent={() => value}
+            onMediaOpen={() => setMediaOpen(true)}
+          />
           <SplitPreview
             value={value}
             onChange={handleChange}
@@ -346,16 +232,31 @@ export function RichMarkdownEditor({
         </div>
       )}
 
-      {/* 記法ガイドタブ */}
-      {activeTab === 'guide' && (
-        <div
-          className="overflow-y-auto bg-[#282c34] p-6"
-          style={{ height: `${height}px` }}
-        >
-          <div className="prose prose-invert prose-sm prose-headings:text-[#e06c75] prose-headings:font-bold prose-p:text-[#abb2bf] prose-strong:text-[#e5c07b] prose-code:text-[#e06c75] prose-code:bg-[#3e4451] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-none prose-code:after:content-none prose-pre:bg-[#21252b] prose-pre:border prose-pre:border-[#3e4451] prose-pre:rounded-lg prose-th:text-[#abb2bf] prose-th:bg-[#21252b] prose-td:text-[#abb2bf] prose-li:text-[#abb2bf] prose-hr:border-[#3e4451] max-w-none">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {MARKDOWN_GUIDE}
-            </ReactMarkdown>
+      {/* メディアライブラリモーダル */}
+      {mediaOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-background border-border h-[80vh] w-[90vw] max-w-4xl overflow-hidden rounded-lg border shadow-lg">
+            <MediaLibrary
+              multiSelect
+              onInsert={(urls) => {
+                const view = getView();
+                const mdText = urls.map((url) => `![image](${url})`).join('\n');
+                if (view) {
+                  const { from } = view.state.selection.main;
+                  const line = view.state.doc.lineAt(from);
+                  const prefix = from > line.from ? '\n' : '';
+                  view.dispatch({
+                    changes: { from, insert: prefix + mdText + '\n' },
+                  });
+                  view.focus();
+                } else {
+                  onChange(value + '\n' + mdText + '\n');
+                }
+                toast.success(`${urls.length}件の画像を挿入しました`);
+                setMediaOpen(false);
+              }}
+              onClose={() => setMediaOpen(false)}
+            />
           </div>
         </div>
       )}
@@ -363,11 +264,9 @@ export function RichMarkdownEditor({
       {/* フッター */}
       <div className="flex items-center justify-between border-t border-[#3e4451] bg-[#21252b] px-4 py-1">
         <span className="text-xs text-[#5c6370]">
-          {activeTab === 'edit'
-            ? 'Ctrl+Z で元に戻す　Ctrl+F で検索'
-            : activeTab === 'preview'
-              ? 'レンダリング済みプレビュー'
-              : 'Markdown 記法リファレンス'}
+          {activeTab === 'preview'
+            ? 'レンダリング済みプレビュー'
+            : 'Ctrl+Z で元に戻す　Ctrl+F で検索'}
         </span>
         <span className="text-xs text-[#5c6370]">One Dark</span>
       </div>

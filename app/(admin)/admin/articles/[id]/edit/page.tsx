@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { getArticleById } from '@/presentation/actions/getArticleById';
 import { updateArticle } from '@/presentation/actions/updateArticle';
+import { listTags } from '@/presentation/actions/listTags';
 import { ArticleForm } from '@/components/features/ArticleForm';
 
 interface ArticleEditPageProps {
@@ -11,7 +12,10 @@ export default async function ArticleEditPage({
   params,
 }: ArticleEditPageProps) {
   const { id } = await params;
-  const article = await getArticleById({ articleId: id });
+  const [article, tags] = await Promise.all([
+    getArticleById({ articleId: id }),
+    listTags(),
+  ]);
 
   if (!article) notFound();
 
@@ -38,6 +42,7 @@ export default async function ArticleEditPage({
           slug: article.slug,
           tagNames: article.tagNames,
         }}
+        initialTagSuggestions={tags}
         onSubmit={handleSubmit}
       />
     </div>

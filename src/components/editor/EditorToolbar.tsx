@@ -31,6 +31,7 @@ import { AiAssistMenu } from './AiAssistMenu';
 interface EditorToolbarProps {
   getView: () => EditorView | null;
   getFullContent?: () => string;
+  onMediaOpen?: () => void;
 }
 
 interface ToolButtonProps {
@@ -56,7 +57,11 @@ function Divider() {
   return <div className="mx-0.5 h-5 w-px bg-[#3e4451]" />;
 }
 
-export function EditorToolbar({ getView, getFullContent }: EditorToolbarProps) {
+export function EditorToolbar({
+  getView,
+  getFullContent,
+  onMediaOpen,
+}: EditorToolbarProps) {
   function v(fn: (view: EditorView) => void) {
     return () => {
       const view = getView();
@@ -156,8 +161,8 @@ export function EditorToolbar({ getView, getFullContent }: EditorToolbarProps) {
         <Link2 size={15} />
       </ToolButton>
       <ToolButton
-        title="画像"
-        onClick={v((view) => wrap(view, '![', '](画像URL)', 'alt'))}
+        title="メディアライブラリから画像を挿入"
+        onClick={() => onMediaOpen?.()}
       >
         <Image size={15} />
       </ToolButton>

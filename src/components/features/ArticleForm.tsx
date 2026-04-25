@@ -1,16 +1,14 @@
 'use client';
 
-import { useState, useTransition, useCallback, useEffect } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { HelpCircleIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MediaLibrary } from '@/components/features/MediaLibrary';
 import { RichMarkdownEditor } from '@/components/features/RichMarkdownEditor';
 import { TagInput } from '@/components/features/TagInput';
-import { uploadImage } from '@/presentation/actions/uploadImage';
 import { listTags, type TagItem } from '@/presentation/actions/listTags';
 import { useLoading } from '@/contexts/loading/LoadingContext';
 
@@ -38,6 +36,7 @@ interface ArticleFormProps {
     slug?: string;
     tagNames?: string[];
   };
+  initialTagSuggestions?: TagItem[];
   onSubmit: (data: {
     title: string;
     content: string;
@@ -49,50 +48,29 @@ interface ArticleFormProps {
 export function ArticleForm({
   mode,
   defaultValues,
+  initialTagSuggestions = [],
   onSubmit,
 }: ArticleFormProps) {
   const [title, setTitle] = useState(defaultValues?.title ?? '');
   const [content, setContent] = useState(defaultValues?.content ?? '');
   const [slug, setSlug] = useState(defaultValues?.slug ?? '');
   const [tags, setTags] = useState<string[]>(defaultValues?.tagNames ?? []);
-  const [tagSuggestions, setTagSuggestions] = useState<TagItem[]>([]);
+  const [tagSuggestions, setTagSuggestions] = useState<TagItem[]>(
+    initialTagSuggestions
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [mediaOpen, setMediaOpen] = useState(false);
   const [showSlugTooltip, setShowSlugTooltip] = useState(false);
   const { showLoading, hideLoading } = useLoading();
 
-  // 既存タグを取得
+  // 既存タグを取得（initialTagSuggestionsが空の場合のフォールバック）
   useEffect(() => {
+    if (initialTagSuggestions.length > 0) return;
     listTags()
       .then(setTagSuggestions)
       .catch(() => {});
-  }, []);
-
-  const handleImageUpload = useCallback(async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-      const { url } = await uploadImage(formData);
-      setContent((prev) => `${prev}\n![image](${url})\n`);
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : '画像のアップロードに失敗しました'
-      );
-    }
-  }, []);
-
-  const handleDrop = useCallback(
-    async (event: React.DragEvent) => {
-      event.preventDefault();
-      const file = event.dataTransfer.files[0];
-      if (file?.type.startsWith('image/')) await handleImageUpload(file);
-    },
-    [handleImageUpload]
-  );
+  }, [initialTagSuggestions.length]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,6 +104,7 @@ export function ArticleForm({
           (error.message === 'NEXT_REDIRECT' ||
             (error as { digest?: string }).digest?.startsWith('NEXT_REDIRECT'))
         ) {
+          hideLoading();
           throw error;
         }
         hideLoading();
@@ -220,32 +199,10 @@ export function ArticleForm({
 
       {/* 本文 */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="content">本文</Label>
-          <button
-            type="button"
-            onClick={() => setMediaOpen(true)}
-            className="text-muted-foreground hover:text-foreground flex items-center gap-1 rounded text-xs transition-colors"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 20 20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <rect x="1" y="3" width="18" height="14" rx="2" />
-              <circle cx="6.5" cy="8.5" r="1.5" />
-              <path d="M1 14l5-5 3 3 3-3 7 7" />
-            </svg>
-            メディア挿入
-          </button>
-        </div>
+        <Label htmlFor="content">本文</Label>
         <RichMarkdownEditor
           value={content}
           onChange={setContent}
-          onDrop={handleDrop}
           height={500}
           articleId={defaultValues?.articleId ?? 'new'}
         />
@@ -255,25 +212,6 @@ export function ArticleForm({
           </p>
         )}
       </div>
-
-      {/* メディアライブラリ */}
-      {mediaOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-background border-border h-[80vh] w-[90vw] max-w-4xl overflow-hidden rounded-lg border shadow-lg">
-            <MediaLibrary
-              multiSelect
-              onInsert={(urls) => {
-                const markdown = urls
-                  .map((url) => `![image](${url})`)
-                  .join('\n');
-                setContent((prev) => `${prev}\n${markdown}\n`);
-                toast.success(`${urls.length}件の画像を挿入しました`);
-              }}
-              onClose={() => setMediaOpen(false)}
-            />
-          </div>
-        </div>
-      )}
 
       {/* タグ */}
       <div className="space-y-2">
