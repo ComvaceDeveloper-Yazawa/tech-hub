@@ -85,6 +85,21 @@ export default function LoginPage() {
               {isPending ? 'ログイン中...' : 'ログイン'}
             </Button>
           </form>
+
+          <div className="mt-4 border-t pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => {
+                setEmail('admin@example.com');
+                setPassword('admin1234');
+              }}
+            >
+              管理者情報を入力
+            </Button>
+          </div>
         </div>
       </div>
     </div>
