@@ -4,11 +4,9 @@ import { useState, useTransition, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog } from '@/components/ui/dialog';
 import { MediaLibrary } from '@/components/features/MediaLibrary';
 import { uploadImage } from '@/presentation/actions/uploadImage';
 
@@ -181,21 +179,51 @@ export function ArticleForm({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="content">本文</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setMediaOpen(true)}
-          >
-            <ImageIcon className="mr-1 h-4 w-4" />
-            メディア
-          </Button>
         </div>
         <div onDrop={handleDrop} onDragOver={(e) => e.preventDefault()}>
           <MDEditor
             value={content}
             onChange={(val) => setContent(val ?? '')}
             height={400}
+            commands={[
+              ...require('@uiw/react-md-editor')
+                .commands.getCommands()
+                .filter((cmd: { name?: string }) => cmd.name !== 'image'),
+              {
+                name: 'image',
+                keyCommand: 'image',
+                buttonProps: {
+                  'aria-label': 'メディアライブラリから画像を挿入',
+                },
+                icon: (
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <rect
+                      x="1"
+                      y="3"
+                      width="18"
+                      height="14"
+                      rx="2"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <circle cx="6.5" cy="8.5" r="1.5" />
+                    <path
+                      d="M1 14l5-5 3 3 3-3 7 7"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      fill="none"
+                    />
+                  </svg>
+                ),
+                execute: () => setMediaOpen(true),
+              },
+            ]}
           />
         </div>
         {errors.content && (
@@ -206,19 +234,21 @@ export function ArticleForm({
       </div>
 
       {mediaOpen && (
-        <Dialog open={mediaOpen} onOpenChange={setMediaOpen}>
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-background border-border h-[80vh] w-[90vw] max-w-4xl overflow-hidden rounded-lg border shadow-lg">
-              <MediaLibrary
-                onSelect={(url) => {
-                  setContent((prev) => `${prev}\n![image](${url})\n`);
-                  toast.success('画像を挿入しました');
-                }}
-                onClose={() => setMediaOpen(false)}
-              />
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-background border-border h-[80vh] w-[90vw] max-w-4xl overflow-hidden rounded-lg border shadow-lg">
+            <MediaLibrary
+              multiSelect
+              onInsert={(urls) => {
+                const markdown = urls
+                  .map((url) => `![image](${url})`)
+                  .join('\n');
+                setContent((prev) => `${prev}\n${markdown}\n`);
+                toast.success(`${urls.length}件の画像を挿入しました`);
+              }}
+              onClose={() => setMediaOpen(false)}
+            />
           </div>
-        </Dialog>
+        </div>
       )}
 
       <div className="space-y-2">

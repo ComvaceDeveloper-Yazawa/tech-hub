@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useTransition, useRef } from 'react';
+import { useState, useEffect, useCallback, useTransition } from 'react';
 import {
   ImageIcon,
   FolderIcon,
@@ -9,6 +9,7 @@ import {
   Trash2Icon,
   CopyIcon,
   XIcon,
+  CheckIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -18,18 +19,28 @@ import { uploadMedia } from '@/presentation/actions/uploadMedia';
 import { deleteMedia } from '@/presentation/actions/deleteMedia';
 
 interface MediaLibraryProps {
+  /** 単一選択モード（従来の onSelect） */
   onSelect?: (url: string) => void;
+  /** 複数選択モード */
+  onInsert?: (urls: string[]) => void;
   onClose?: () => void;
+  /** 複数選択を許可するか（デフォルト true） */
+  multiSelect?: boolean;
 }
 
-export function MediaLibrary({ onSelect, onClose }: MediaLibraryProps) {
+export function MediaLibrary({
+  onSelect,
+  onInsert,
+  onClose,
+  multiSelect = true,
+}: MediaLibraryProps) {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [currentFolder, setCurrentFolder] = useState<string>('');
   const [newFolder, setNewFolder] = useState('');
-  const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
+  const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
+  const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback((folder: string) => {
     startTransition(async () => {
@@ -65,16 +76,17 @@ export function MediaLibrary({ onSelect, onClose }: MediaLibraryProps) {
   );
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleUpload(file);
+    const files = Array.from(e.target.files ?? []);
+    files.forEach((f) => handleUpload(f));
     e.target.value = '';
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file?.type.startsWith('image/')) handleUpload(file);
+    Array.from(e.dataTransfer.files)
+      .filter((f) => f.type.startsWith('image/'))
+      .forEach((f) => handleUpload(f));
   };
 
   const handleDelete = async (item: MediaItem) => {
@@ -82,7 +94,12 @@ export function MediaLibrary({ onSelect, onClose }: MediaLibraryProps) {
     try {
       await deleteMedia(item.path);
       toast.success('削除しました');
-      if (selectedItem?.path === item.path) setSelectedItem(null);
+      setSelectedPaths((prev) => {
+        const next = new Set(prev);
+        next.delete(item.path);
+        return next;
+      });
+      if (previewItem?.path === item.path) setPreviewItem(null);
       load(currentFolder);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : '削除に失敗しました');
@@ -113,8 +130,36 @@ export function MediaLibrary({ onSelect, onClose }: MediaLibraryProps) {
     });
   };
 
-  const breadcrumbs = currentFolder ? currentFolder.split('/') : [];
+  const toggleSelect = (file: MediaItem) => {
+    if (!multiSelect) {
+      setSelectedPaths(new Set([file.path]));
+      setPreviewItem(file);
+      return;
+    }
+    setSelectedPaths((prev) => {
+      const next = new Set(prev);
+      if (next.has(file.path)) {
+        next.delete(file.path);
+      } else {
+        next.add(file.path);
+      }
+      return next;
+    });
+    setPreviewItem(file);
+  };
 
+  const handleInsert = () => {
+    const selectedFiles = files.filter((f) => selectedPaths.has(f.path));
+    const urls = selectedFiles.map((f) => f.url);
+    if (onInsert) {
+      onInsert(urls);
+    } else if (onSelect && urls[0]) {
+      onSelect(urls[0]);
+    }
+    onClose?.();
+  };
+
+  const breadcrumbs = currentFolder ? currentFolder.split('/') : [];
   const folders = items.filter((i) => i.isFolder);
   const files = items.filter((i) => !i.isFolder && i.name !== '.gitkeep');
 
@@ -126,7 +171,8 @@ export function MediaLibrary({ onSelect, onClose }: MediaLibraryProps) {
           <button
             onClick={() => {
               setCurrentFolder('');
-              setSelectedItem(null);
+              setPreviewItem(null);
+              setSelectedPaths(new Set());
             }}
             className="text-muted-foreground hover:text-foreground font-medium"
           >
@@ -138,7 +184,8 @@ export function MediaLibrary({ onSelect, onClose }: MediaLibraryProps) {
               <button
                 onClick={() => {
                   setCurrentFolder(breadcrumbs.slice(0, i + 1).join('/'));
-                  setSelectedItem(null);
+                  setPreviewItem(null);
+                  setSelectedPaths(new Set());
                 }}
                 className="text-muted-foreground hover:text-foreground"
               >
@@ -170,7 +217,8 @@ export function MediaLibrary({ onSelect, onClose }: MediaLibraryProps) {
                   const parts = currentFolder.split('/');
                   parts.pop();
                   setCurrentFolder(parts.join('/'));
-                  setSelectedItem(null);
+                  setPreviewItem(null);
+                  setSelectedPaths(new Set());
                 }}
               >
                 <ArrowLeftIcon className="mr-1 h-4 w-4" />
@@ -183,10 +231,10 @@ export function MediaLibrary({ onSelect, onClose }: MediaLibraryProps) {
                 size="sm"
                 type="button"
                 onClick={(e) => {
-                  const label = (e.currentTarget as HTMLElement).closest(
-                    'label'
-                  );
-                  label?.querySelector('input')?.click();
+                  (e.currentTarget as HTMLElement)
+                    .closest('label')
+                    ?.querySelector('input')
+                    ?.click();
                 }}
               >
                 <UploadIcon className="mr-1 h-4 w-4" />
@@ -195,6 +243,7 @@ export function MediaLibrary({ onSelect, onClose }: MediaLibraryProps) {
               <input
                 type="file"
                 accept="image/*"
+                multiple
                 className="hidden"
                 onChange={handleFileInput}
               />
@@ -217,6 +266,18 @@ export function MediaLibrary({ onSelect, onClose }: MediaLibraryProps) {
                 作成
               </Button>
             </div>
+            {/* 選択中の件数と挿入ボタン */}
+            {(onInsert || onSelect) && selectedPaths.size > 0 && (
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-muted-foreground text-xs">
+                  {selectedPaths.size}件選択中
+                </span>
+                <Button size="sm" onClick={handleInsert}>
+                  <ImageIcon className="mr-1 h-4 w-4" />
+                  挿入
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* ファイルグリッド */}
@@ -245,9 +306,10 @@ export function MediaLibrary({ onSelect, onClose }: MediaLibraryProps) {
                     className="hover:bg-accent flex flex-col items-center gap-1 rounded-lg p-2 text-center"
                     onDoubleClick={() => {
                       setCurrentFolder(folder.path);
-                      setSelectedItem(null);
+                      setPreviewItem(null);
+                      setSelectedPaths(new Set());
                     }}
-                    onClick={() => setSelectedItem(folder)}
+                    onClick={() => setPreviewItem(folder)}
                   >
                     <FolderIcon className="text-primary h-10 w-10" />
                     <span className="w-full truncate text-xs">
@@ -255,78 +317,80 @@ export function MediaLibrary({ onSelect, onClose }: MediaLibraryProps) {
                     </span>
                   </button>
                 ))}
-                {files.map((file) => (
-                  <button
-                    key={file.path}
-                    onClick={() => setSelectedItem(file)}
-                    className={`hover:bg-accent flex flex-col items-center gap-1 rounded-lg p-2 text-center ${selectedItem?.path === file.path ? 'bg-accent ring-primary ring-2' : ''}`}
-                  >
-                    <div className="bg-muted flex h-16 w-full items-center justify-center overflow-hidden rounded">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={file.url}
-                        alt={file.name}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <span className="w-full truncate text-xs">{file.name}</span>
-                  </button>
-                ))}
+                {files.map((file) => {
+                  const isSelected = selectedPaths.has(file.path);
+                  return (
+                    <button
+                      key={file.path}
+                      onClick={() => toggleSelect(file)}
+                      className={`relative flex flex-col items-center gap-1 rounded-lg p-2 text-center transition-all ${
+                        isSelected
+                          ? 'ring-primary bg-primary/10 ring-2'
+                          : 'hover:bg-accent'
+                      }`}
+                    >
+                      {/* 選択チェックマーク */}
+                      {isSelected && (
+                        <div className="bg-primary absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full">
+                          <CheckIcon className="h-3 w-3 text-white" />
+                        </div>
+                      )}
+                      <div className="bg-muted flex h-16 w-full items-center justify-center overflow-hidden rounded">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={file.url}
+                          alt={file.name}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <span className="w-full truncate text-xs">
+                        {file.name}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
         </div>
 
-        {/* サイドパネル（選択中ファイルの詳細） */}
-        {selectedItem && !selectedItem.isFolder && (
+        {/* サイドパネル（プレビュー） */}
+        {previewItem && !previewItem.isFolder && (
           <div className="border-border w-56 shrink-0 overflow-y-auto border-l p-4">
             <div className="bg-muted mb-3 flex h-32 items-center justify-center overflow-hidden rounded">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={selectedItem.url}
-                alt={selectedItem.name}
+                src={previewItem.url}
+                alt={previewItem.name}
                 className="h-full w-full object-contain"
               />
             </div>
             <p className="mb-1 text-sm font-medium break-all">
-              {selectedItem.name}
+              {previewItem.name}
             </p>
             <p className="text-muted-foreground mb-3 text-xs">
-              {selectedItem.size > 0
-                ? `${Math.round(selectedItem.size / 1024)} KB`
+              {previewItem.size > 0
+                ? `${Math.round(previewItem.size / 1024)} KB`
                 : ''}
             </p>
             <div className="space-y-2">
               <Button
                 size="sm"
+                variant="outline"
                 className="w-full"
                 onClick={() => {
-                  navigator.clipboard.writeText(selectedItem.url);
+                  navigator.clipboard.writeText(previewItem.url);
                   toast.success('URLをコピーしました');
                 }}
               >
                 <CopyIcon className="mr-1 h-4 w-4" />
                 URLをコピー
               </Button>
-              {onSelect && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    onSelect(selectedItem.url);
-                    onClose?.();
-                  }}
-                >
-                  <ImageIcon className="mr-1 h-4 w-4" />
-                  記事に挿入
-                </Button>
-              )}
               <Button
                 size="sm"
                 variant="outline"
                 className="text-destructive hover:text-destructive w-full"
-                onClick={() => handleDelete(selectedItem)}
+                onClick={() => handleDelete(previewItem)}
               >
                 <Trash2Icon className="mr-1 h-4 w-4" />
                 削除
