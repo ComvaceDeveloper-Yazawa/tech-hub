@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { useLoading } from '@/contexts/loading/LoadingContext';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,12 +14,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { showLoading, hideLoading } = useLoading();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
     startTransition(async () => {
+      showLoading();
       const supabase = createClient();
       const { error: authError } = await supabase.auth.signInWithPassword({
         email,
@@ -26,6 +29,7 @@ export default function LoginPage() {
       });
 
       if (authError) {
+        hideLoading();
         setError(authError.message);
         return;
       }

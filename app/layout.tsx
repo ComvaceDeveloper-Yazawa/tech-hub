@@ -3,6 +3,8 @@ import './globals.css';
 import { Geist } from 'next/font/google';
 import { cn } from '@/lib/cn';
 import { Toaster } from 'sonner';
+import { LoadingProvider } from '@/contexts/loading/LoadingContext';
+import { RpgLoadingScreen } from '@/components/features/RpgLoadingScreen';
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -22,8 +24,11 @@ export default function RootLayout({
   return (
     <html lang="ja" className={cn('dark font-sans', geist.variable)}>
       <body>
-        {children}
-        <Toaster />
+        <LoadingProvider>
+          {children}
+          <RpgLoadingScreen />
+          <Toaster />
+        </LoadingProvider>
       </body>
     </html>
   );

@@ -1,7 +1,10 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -13,11 +16,13 @@ import type { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 const CodeMirror = dynamic(() => import('@uiw/react-codemirror'), {
   ssr: false,
   loading: () => (
-    <div className="flex h-[500px] items-center justify-center rounded-lg bg-[#282c34]">
+    <div className="flex h-[500px] items-center justify-center bg-[#282c34]">
       <span className="text-sm text-[#abb2bf]">エディタを読み込み中...</span>
     </div>
   ),
 });
+
+type Tab = 'edit' | 'preview' | 'guide';
 
 interface RichMarkdownEditorProps {
   value: string;
@@ -32,13 +37,8 @@ const editorTheme = EditorView.theme({
     fontFamily:
       '"JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace',
   },
-  '.cm-content': {
-    padding: '16px',
-    lineHeight: '1.8',
-  },
-  '.cm-line': {
-    padding: '0 4px',
-  },
+  '.cm-content': { padding: '16px', lineHeight: '1.8' },
+  '.cm-line': { padding: '0 4px' },
   '.cm-gutters': {
     borderRight: '1px solid #3e4451',
     paddingRight: '8px',
@@ -49,42 +49,10 @@ const editorTheme = EditorView.theme({
     color: '#4b5263',
     fontSize: '12px',
   },
-  '.cm-activeLine': {
-    backgroundColor: '#2c313c',
-  },
-  '.cm-activeLineGutter': {
-    backgroundColor: '#2c313c',
-    color: '#abb2bf',
-  },
-  '.cm-selectionBackground': {
-    backgroundColor: '#3e4451 !important',
-  },
-  '.cm-cursor': {
-    borderLeftColor: '#528bff',
-    borderLeftWidth: '2px',
-  },
-  // Markdownスタイル
-  '.cm-header': { color: '#e06c75', fontWeight: 'bold' },
-  '.cm-strong': { color: '#e5c07b', fontWeight: 'bold' },
-  '.cm-em': { color: '#c678dd', fontStyle: 'italic' },
-  '.cm-link': { color: '#61afef', textDecoration: 'underline' },
-  '.cm-url': { color: '#56b6c2' },
-  '.cm-quote': { color: '#5c6370', fontStyle: 'italic' },
-  '.cm-monospace': {
-    fontFamily: '"JetBrains Mono", monospace',
-    backgroundColor: '#3e4451',
-    borderRadius: '3px',
-    padding: '0 4px',
-    color: '#e06c75',
-  },
-  // コードブロック
-  '.cm-codeblock': {
-    backgroundColor: '#21252b',
-    display: 'block',
-    borderLeft: '3px solid #528bff',
-    paddingLeft: '12px',
-  },
-  // スクロールバー
+  '.cm-activeLine': { backgroundColor: '#2c313c' },
+  '.cm-activeLineGutter': { backgroundColor: '#2c313c', color: '#abb2bf' },
+  '.cm-selectionBackground': { backgroundColor: '#3e4451 !important' },
+  '.cm-cursor': { borderLeftColor: '#528bff', borderLeftWidth: '2px' },
   '.cm-scroller': {
     overflow: 'auto',
     scrollbarWidth: 'thin',
@@ -92,19 +60,94 @@ const editorTheme = EditorView.theme({
   },
 });
 
+const MARKDOWN_GUIDE = `
+# Markdown 記法ガイド
+
+## 見出し
+
+\`\`\`
+# 見出し1
+## 見出し2
+### 見出し3
+\`\`\`
+
+## テキスト装飾
+
+| 記法 | 表示 |
+|------|------|
+| \`**太字**\` | **太字** |
+| \`*斜体*\` | *斜体* |
+| \`~~打ち消し~~\` | ~~打ち消し~~ |
+| \`\`インラインコード\`\` | \`インラインコード\` |
+
+## リスト
+
+\`\`\`
+- 箇条書き1
+- 箇条書き2
+  - ネスト
+
+1. 番号付き1
+2. 番号付き2
+\`\`\`
+
+## コードブロック
+
+\`\`\`
+\`\`\`typescript
+const hello = "world";
+console.log(hello);
+\`\`\`
+\`\`\`
+
+## リンク・画像
+
+\`\`\`
+[リンクテキスト](https://example.com)
+![代替テキスト](画像URL)
+\`\`\`
+
+## 引用
+
+\`\`\`
+> 引用テキスト
+> 複数行も可能
+\`\`\`
+
+## 水平線
+
+\`\`\`
+---
+\`\`\`
+
+## テーブル
+
+\`\`\`
+| 列1 | 列2 | 列3 |
+|-----|-----|-----|
+| A   | B   | C   |
+| D   | E   | F   |
+\`\`\`
+
+## チェックボックス
+
+\`\`\`
+- [x] 完了タスク
+- [ ] 未完了タスク
+\`\`\`
+`;
+
 export function RichMarkdownEditor({
   value,
   onChange,
   onDrop,
   height = 500,
 }: RichMarkdownEditorProps) {
+  const [activeTab, setActiveTab] = useState<Tab>('edit');
   const editorRef = useRef<ReactCodeMirrorRef>(null);
 
   const extensions = [
-    markdown({
-      base: markdownLanguage,
-      codeLanguages: languages,
-    }),
+    markdown({ base: markdownLanguage, codeLanguages: languages }),
     history(),
     keymap.of([...defaultKeymap, ...historyKeymap]),
     EditorView.lineWrapping,
@@ -112,73 +155,135 @@ export function RichMarkdownEditor({
     EditorState.tabSize.of(2),
   ];
 
-  const handleChange = useCallback(
-    (val: string) => {
-      onChange(val);
-    },
-    [onChange]
-  );
+  const handleChange = useCallback((val: string) => onChange(val), [onChange]);
+
+  const tabs: { id: Tab; label: string }[] = [
+    { id: 'edit', label: '✏️ 編集' },
+    { id: 'preview', label: '👁 プレビュー' },
+    { id: 'guide', label: '📖 記法ガイド' },
+  ];
 
   return (
     <div
       className="overflow-hidden rounded-lg border border-[#3e4451] shadow-lg"
-      onDrop={onDrop}
+      onDrop={activeTab === 'edit' ? onDrop : undefined}
       onDragOver={(e) => e.preventDefault()}
     >
-      {/* エディタヘッダー */}
-      <div className="flex items-center gap-2 border-b border-[#3e4451] bg-[#21252b] px-4 py-2">
-        <div className="flex gap-1.5">
+      {/* ヘッダー */}
+      <div className="flex items-center border-b border-[#3e4451] bg-[#21252b]">
+        {/* 信号機 */}
+        <div className="flex items-center gap-1.5 px-4 py-2">
           <div className="h-3 w-3 rounded-full bg-[#e06c75]" />
           <div className="h-3 w-3 rounded-full bg-[#e5c07b]" />
           <div className="h-3 w-3 rounded-full bg-[#98c379]" />
         </div>
-        <span className="ml-2 text-xs text-[#5c6370]">Markdown</span>
-        <div className="ml-auto flex items-center gap-3 text-xs text-[#5c6370]">
-          <span>UTF-8</span>
-          <span>Markdown</span>
+
+        {/* タブ */}
+        <div className="flex">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`border-b-2 px-4 py-2 text-xs font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'border-[#528bff] bg-[#282c34] text-[#abb2bf]'
+                  : 'border-transparent text-[#5c6370] hover:text-[#abb2bf]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="ml-auto flex items-center gap-3 px-4 text-xs text-[#5c6370]">
+          <span>{value.split('\n').length} 行</span>
+          <span>{value.length} 文字</span>
         </div>
       </div>
 
-      <CodeMirror
-        ref={editorRef}
-        value={value}
-        height={`${height}px`}
-        theme={oneDark}
-        extensions={extensions}
-        onChange={handleChange}
-        basicSetup={{
-          lineNumbers: true,
-          highlightActiveLineGutter: true,
-          highlightSpecialChars: true,
-          foldGutter: true,
-          drawSelection: true,
-          dropCursor: true,
-          allowMultipleSelections: true,
-          indentOnInput: true,
-          syntaxHighlighting: true,
-          bracketMatching: true,
-          closeBrackets: true,
-          autocompletion: false,
-          rectangularSelection: true,
-          crosshairCursor: false,
-          highlightActiveLine: true,
-          highlightSelectionMatches: true,
-          closeBracketsKeymap: true,
-          searchKeymap: true,
-          foldKeymap: true,
-          completionKeymap: false,
-          lintKeymap: false,
-        }}
-      />
+      {/* 編集タブ */}
+      {activeTab === 'edit' && (
+        <CodeMirror
+          ref={editorRef}
+          value={value}
+          height={`${height}px`}
+          theme={oneDark}
+          extensions={extensions}
+          onChange={handleChange}
+          basicSetup={{
+            lineNumbers: true,
+            highlightActiveLineGutter: true,
+            highlightSpecialChars: true,
+            foldGutter: true,
+            drawSelection: true,
+            dropCursor: true,
+            allowMultipleSelections: true,
+            indentOnInput: true,
+            syntaxHighlighting: true,
+            bracketMatching: true,
+            closeBrackets: true,
+            autocompletion: false,
+            rectangularSelection: true,
+            crosshairCursor: false,
+            highlightActiveLine: true,
+            highlightSelectionMatches: true,
+            closeBracketsKeymap: true,
+            searchKeymap: true,
+            foldKeymap: true,
+            completionKeymap: false,
+            lintKeymap: false,
+          }}
+        />
+      )}
+
+      {/* プレビュータブ */}
+      {activeTab === 'preview' && (
+        <div
+          className="overflow-y-auto bg-[#282c34] p-6"
+          style={{ height: `${height}px` }}
+        >
+          {value.trim() ? (
+            <div className="prose prose-invert prose-sm prose-headings:text-[#e06c75] prose-headings:font-bold prose-p:text-[#abb2bf] prose-p:leading-relaxed prose-strong:text-[#e5c07b] prose-em:text-[#c678dd] prose-code:text-[#e06c75] prose-code:bg-[#3e4451] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-none prose-code:after:content-none prose-pre:bg-[#21252b] prose-pre:border prose-pre:border-[#3e4451] prose-pre:rounded-lg prose-blockquote:border-l-[#528bff] prose-blockquote:text-[#5c6370] prose-blockquote:bg-[#21252b] prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r prose-a:text-[#61afef] prose-a:no-underline hover:prose-a:underline prose-hr:border-[#3e4451] prose-th:text-[#abb2bf] prose-th:bg-[#21252b] prose-td:text-[#abb2bf] prose-li:text-[#abb2bf] prose-img:rounded-lg prose-img:shadow-lg max-w-none">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
+              >
+                {value}
+              </ReactMarkdown>
+            </div>
+          ) : (
+            <p className="mt-8 text-center text-sm text-[#5c6370]">
+              本文を入力するとプレビューが表示されます
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* 記法ガイドタブ */}
+      {activeTab === 'guide' && (
+        <div
+          className="overflow-y-auto bg-[#282c34] p-6"
+          style={{ height: `${height}px` }}
+        >
+          <div className="prose prose-invert prose-sm prose-headings:text-[#e06c75] prose-headings:font-bold prose-p:text-[#abb2bf] prose-strong:text-[#e5c07b] prose-code:text-[#e06c75] prose-code:bg-[#3e4451] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-none prose-code:after:content-none prose-pre:bg-[#21252b] prose-pre:border prose-pre:border-[#3e4451] prose-pre:rounded-lg prose-th:text-[#abb2bf] prose-th:bg-[#21252b] prose-td:text-[#abb2bf] prose-li:text-[#abb2bf] prose-hr:border-[#3e4451] max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {MARKDOWN_GUIDE}
+            </ReactMarkdown>
+          </div>
+        </div>
+      )}
 
       {/* フッター */}
       <div className="flex items-center justify-between border-t border-[#3e4451] bg-[#21252b] px-4 py-1">
         <span className="text-xs text-[#5c6370]">
-          {value.split('\n').length} 行 / {value.length} 文字
+          {activeTab === 'edit'
+            ? 'Ctrl+Z で元に戻す　Ctrl+F で検索'
+            : activeTab === 'preview'
+              ? 'レンダリング済みプレビュー'
+              : 'Markdown 記法リファレンス'}
         </span>
-        <span className="text-xs text-[#5c6370]">
-          Ctrl+Z で元に戻す　Ctrl+F で検索
-        </span>
+        <span className="text-xs text-[#5c6370]">One Dark</span>
       </div>
     </div>
   );

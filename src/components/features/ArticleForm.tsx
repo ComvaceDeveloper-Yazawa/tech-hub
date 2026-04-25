@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { MediaLibrary } from '@/components/features/MediaLibrary';
 import { RichMarkdownEditor } from '@/components/features/RichMarkdownEditor';
 import { uploadImage } from '@/presentation/actions/uploadImage';
+import { useLoading } from '@/contexts/loading/LoadingContext';
 
 const articleFormSchema = z.object({
   title: z
@@ -58,6 +59,7 @@ export function ArticleForm({
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [mediaOpen, setMediaOpen] = useState(false);
+  const { showLoading, hideLoading } = useLoading();
 
   const handleImageUpload = useCallback(async (file: File) => {
     const formData = new FormData();
@@ -115,6 +117,7 @@ export function ArticleForm({
       .filter(Boolean);
 
     startTransition(async () => {
+      showLoading();
       try {
         await onSubmit({
           title,
@@ -123,6 +126,15 @@ export function ArticleForm({
           tagIds: tagIds.length > 0 ? tagIds : undefined,
         });
       } catch (error) {
+        // Next.js の redirect() は内部的に例外を投げるので再スローする
+        if (
+          error instanceof Error &&
+          (error.message === 'NEXT_REDIRECT' ||
+            (error as { digest?: string }).digest?.startsWith('NEXT_REDIRECT'))
+        ) {
+          throw error;
+        }
+        hideLoading();
         setFormError(
           error instanceof Error ? error.message : '保存に失敗しました'
         );

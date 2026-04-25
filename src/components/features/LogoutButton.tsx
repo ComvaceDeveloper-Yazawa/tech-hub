@@ -4,15 +4,19 @@ import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { useLoading } from '@/contexts/loading/LoadingContext';
 
 export function LogoutButton() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { showLoading, hideLoading } = useLoading();
 
   const handleLogout = () => {
     startTransition(async () => {
+      showLoading();
       const supabase = createClient();
       await supabase.auth.signOut();
+      hideLoading();
       router.push('/login');
       router.refresh();
     });
