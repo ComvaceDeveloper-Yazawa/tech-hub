@@ -13,6 +13,10 @@ import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { markdownKeymap } from '@/components/editor/markdownKeymap';
 import { EditorToolbar } from '@/components/editor/EditorToolbar';
 import { SplitPreview } from '@/components/editor/SplitPreview';
+import { slashCommandExtension } from '@/components/editor/slashCommands';
+import { createImageHandlers } from '@/components/editor/imageHandlers';
+import { createFormatOnPasteHandler } from '@/components/editor/formatOnPasteHandler';
+import { toast } from 'sonner';
 import { EditorState } from '@codemirror/state';
 import type { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 
@@ -156,6 +160,11 @@ export function RichMarkdownEditor({
     EditorView.lineWrapping,
     editorTheme,
     EditorState.tabSize.of(2),
+    slashCommandExtension,
+    createImageHandlers((msg) => toast.error(msg)),
+    createFormatOnPasteHandler((lang) =>
+      toast.success(`${lang} コードをフォーマットしました`)
+    ),
   ];
 
   const handleChange = useCallback((val: string) => onChange(val), [onChange]);
