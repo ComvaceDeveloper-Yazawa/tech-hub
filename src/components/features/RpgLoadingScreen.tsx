@@ -22,15 +22,14 @@ export function RpgLoadingScreen() {
   const shownAtRef = useRef<number | null>(null);
 
   useEffect(() => {
-    let showTimer: ReturnType<typeof setTimeout>;
     let hideTimer: ReturnType<typeof setTimeout>;
 
     if (isLoading) {
-      showTimer = setTimeout(() => {
-        shownAtRef.current = Date.now();
-        setVisible(true);
-      }, 100);
+      // 表示開始時刻を即記録して即表示
+      shownAtRef.current = Date.now();
+      setVisible(true);
     } else {
+      // 表示開始から MIN_DISPLAY_MS 経過するまで待ってから非表示
       const elapsed = shownAtRef.current
         ? Date.now() - shownAtRef.current
         : MIN_DISPLAY_MS;
@@ -42,7 +41,6 @@ export function RpgLoadingScreen() {
     }
 
     return () => {
-      clearTimeout(showTimer);
       clearTimeout(hideTimer);
     };
   }, [isLoading]);
