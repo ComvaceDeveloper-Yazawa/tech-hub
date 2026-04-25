@@ -177,11 +177,19 @@ export function MediaLibrary({ onSelect, onClose }: MediaLibraryProps) {
               </Button>
             )}
             <label className="cursor-pointer">
-              <Button variant="outline" size="sm" asChild>
-                <span>
-                  <UploadIcon className="mr-1 h-4 w-4" />
-                  アップロード
-                </span>
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                onClick={(e) => {
+                  const label = (e.currentTarget as HTMLElement).closest(
+                    'label'
+                  );
+                  label?.querySelector('input')?.click();
+                }}
+              >
+                <UploadIcon className="mr-1 h-4 w-4" />
+                アップロード
               </Button>
               <input
                 type="file"
