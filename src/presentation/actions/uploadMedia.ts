@@ -2,6 +2,7 @@
 
 import { ulid } from 'ulid';
 import { createClient } from '@/lib/supabase/server';
+import { createStorageClient } from '@/lib/supabase/storage';
 import { TenantId } from '@/contexts/shared-kernel/TenantId';
 
 const ALLOWED_IMAGE_TYPES = [
@@ -23,6 +24,13 @@ const EXTENSION_MAP: Record<string, string> = {
 export async function uploadMedia(
   formData: FormData
 ): Promise<{ url: string; path: string }> {
+  // 認証チェック
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('認証が必要です');
+
   const file = formData.get('file');
   const folder = formData.get('folder');
   const isPlaceholder = formData.get('placeholder') === 'true';
@@ -31,7 +39,6 @@ export async function uploadMedia(
 
   if (!(file instanceof File)) throw new Error('ファイルが選択されていません');
 
-  // フォルダ作成用プレースホルダーはバリデーションをスキップ
   if (!isPlaceholder) {
     if (
       !ALLOWED_IMAGE_TYPES.includes(
@@ -53,8 +60,8 @@ export async function uploadMedia(
     ? `${tenantId}/${folderPath}/${fileName}`
     : `${tenantId}/${fileName}`;
 
-  const supabase = await createClient();
-  const { error } = await supabase.storage
+  const storage = createStorageClient();
+  const { error } = await storage
     .from('article-images')
     .upload(filePath, file, {
       contentType: isPlaceholder ? 'text/plain' : file.type,
@@ -65,7 +72,7 @@ export async function uploadMedia(
 
   const {
     data: { publicUrl },
-  } = supabase.storage.from('article-images').getPublicUrl(filePath);
+  } = storage.from('article-images').getPublicUrl(filePath);
 
   return { url: publicUrl, path: filePath };
 }
