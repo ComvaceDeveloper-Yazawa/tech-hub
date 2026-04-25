@@ -10,13 +10,14 @@ import { TenantId } from '@/contexts/shared-kernel/TenantId';
 import { TagId } from '@/contexts/shared-kernel/TagId';
 import { PrismaArticleRepository } from '@/contexts/publishing/infrastructure/PrismaArticleRepository';
 import { prisma } from '@/lib/prisma';
+import { upsertTags } from '@/presentation/actions/upsertTags';
 
 export async function updateArticle(input: {
   articleId: string;
   title?: string;
   content?: string;
   slug?: string;
-  tagIds?: string[];
+  tagNames?: string[];
 }): Promise<void> {
   const validated = updateArticleInputSchema.parse(input);
 
@@ -30,17 +31,16 @@ export async function updateArticle(input: {
       ? ArticleContent.fromString(validated.content)
       : undefined;
   const slug = validated.slug ? Slug.fromString(validated.slug) : undefined;
-  const tagIds = validated.tagIds?.map((id) => TagId.fromString(id));
+
+  // タグ名をupsertしてIDに変換
+  const tagIdStrings =
+    validated.tagNames !== undefined
+      ? await upsertTags(validated.tagNames)
+      : undefined;
+  const tagIds = tagIdStrings?.map((id) => TagId.fromString(id));
 
   const repository = new PrismaArticleRepository(prisma);
   const useCase = new UpdateArticleUseCase(repository);
 
-  await useCase.execute({
-    articleId,
-    tenantId,
-    title,
-    content,
-    slug,
-    tagIds,
-  });
+  await useCase.execute({ articleId, tenantId, title, content, slug, tagIds });
 }

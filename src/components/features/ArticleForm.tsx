@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useTransition, useCallback } from 'react';
+import { useState, useTransition, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { HelpCircleIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MediaLibrary } from '@/components/features/MediaLibrary';
 import { RichMarkdownEditor } from '@/components/features/RichMarkdownEditor';
+import { TagInput } from '@/components/features/TagInput';
 import { uploadImage } from '@/presentation/actions/uploadImage';
+import { listTags, type TagItem } from '@/presentation/actions/listTags';
 import { useLoading } from '@/contexts/loading/LoadingContext';
 
 const articleFormSchema = z.object({
@@ -24,7 +27,6 @@ const articleFormSchema = z.object({
       /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
       'スラッグは英小文字・数字・ハイフンのみです'
     ),
-  tagIds: z.string().optional(),
 });
 
 interface ArticleFormProps {
@@ -34,13 +36,13 @@ interface ArticleFormProps {
     title?: string;
     content?: string;
     slug?: string;
-    tagIds?: string[];
+    tagNames?: string[];
   };
   onSubmit: (data: {
     title: string;
     content: string;
     slug: string;
-    tagIds?: string[];
+    tagNames?: string[];
   }) => Promise<void>;
 }
 
@@ -52,14 +54,21 @@ export function ArticleForm({
   const [title, setTitle] = useState(defaultValues?.title ?? '');
   const [content, setContent] = useState(defaultValues?.content ?? '');
   const [slug, setSlug] = useState(defaultValues?.slug ?? '');
-  const [tagIdsInput, setTagIdsInput] = useState(
-    defaultValues?.tagIds?.join(', ') ?? ''
-  );
+  const [tags, setTags] = useState<string[]>(defaultValues?.tagNames ?? []);
+  const [tagSuggestions, setTagSuggestions] = useState<TagItem[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [mediaOpen, setMediaOpen] = useState(false);
+  const [showSlugTooltip, setShowSlugTooltip] = useState(false);
   const { showLoading, hideLoading } = useLoading();
+
+  // 既存タグを取得
+  useEffect(() => {
+    listTags()
+      .then(setTagSuggestions)
+      .catch(() => {});
+  }, []);
 
   const handleImageUpload = useCallback(async (file: File) => {
     const formData = new FormData();
@@ -80,9 +89,7 @@ export function ArticleForm({
     async (event: React.DragEvent) => {
       event.preventDefault();
       const file = event.dataTransfer.files[0];
-      if (file && file.type.startsWith('image/')) {
-        await handleImageUpload(file);
-      }
+      if (file?.type.startsWith('image/')) await handleImageUpload(file);
     },
     [handleImageUpload]
   );
@@ -92,29 +99,17 @@ export function ArticleForm({
     setErrors({});
     setFormError(null);
 
-    const parsed = articleFormSchema.safeParse({
-      title,
-      content,
-      slug,
-      tagIds: tagIdsInput,
-    });
-
+    const parsed = articleFormSchema.safeParse({ title, content, slug });
     if (!parsed.success) {
       const fieldErrors: Record<string, string> = {};
       for (const issue of parsed.error.issues) {
         const field = issue.path[0];
-        if (field && typeof field === 'string') {
+        if (field && typeof field === 'string')
           fieldErrors[field] = issue.message;
-        }
       }
       setErrors(fieldErrors);
       return;
     }
-
-    const tagIds = tagIdsInput
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
 
     startTransition(async () => {
       showLoading();
@@ -123,10 +118,9 @@ export function ArticleForm({
           title,
           content,
           slug,
-          tagIds: tagIds.length > 0 ? tagIds : undefined,
+          tagNames: tags.length > 0 ? tags : undefined,
         });
       } catch (error) {
-        // Next.js の redirect() は内部的に例外を投げるので再スローする
         if (
           error instanceof Error &&
           (error.message === 'NEXT_REDIRECT' ||
@@ -153,6 +147,7 @@ export function ArticleForm({
         </div>
       )}
 
+      {/* タイトル */}
       <div className="space-y-2">
         <Label htmlFor="title">タイトル</Label>
         <Input
@@ -170,13 +165,50 @@ export function ArticleForm({
         )}
       </div>
 
+      {/* スラッグ */}
       <div className="space-y-2">
-        <Label htmlFor="slug">スラッグ</Label>
+        <div className="flex items-center gap-1.5">
+          <Label htmlFor="slug">スラッグ</Label>
+          <div className="relative">
+            <button
+              type="button"
+              onMouseEnter={() => setShowSlugTooltip(true)}
+              onMouseLeave={() => setShowSlugTooltip(false)}
+              onFocus={() => setShowSlugTooltip(true)}
+              onBlur={() => setShowSlugTooltip(false)}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="スラッグとは"
+            >
+              <HelpCircleIcon className="h-4 w-4" />
+            </button>
+            {showSlugTooltip && (
+              <div className="bg-popover border-border absolute bottom-full left-1/2 z-50 mb-2 w-72 -translate-x-1/2 rounded-lg border p-3 text-xs shadow-lg">
+                <p className="text-foreground mb-1 font-medium">
+                  スラッグとは？
+                </p>
+                <p className="text-muted-foreground leading-relaxed">
+                  URLに使われる識別子です。例えばスラッグが{' '}
+                  <code className="bg-muted rounded px-1">my-first-post</code>{' '}
+                  の場合、記事のURLは
+                  <code className="bg-muted rounded px-1">
+                    /articles/my-first-post
+                  </code>{' '}
+                  になります。
+                </p>
+                <p className="text-muted-foreground mt-1.5 leading-relaxed">
+                  英小文字・数字・ハイフンのみ使用可能です。
+                </p>
+                {/* 吹き出しの矢印 */}
+                <div className="border-popover absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-current" />
+              </div>
+            )}
+          </div>
+        </div>
         <Input
           id="slug"
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
-          placeholder="article-slug"
+          placeholder="my-first-post"
           aria-invalid={!!errors.slug}
         />
         {errors.slug && (
@@ -186,6 +218,7 @@ export function ArticleForm({
         )}
       </div>
 
+      {/* 本文 */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="content">本文</Label>
@@ -222,6 +255,7 @@ export function ArticleForm({
         )}
       </div>
 
+      {/* メディアライブラリ */}
       {mediaOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-background border-border h-[80vh] w-[90vw] max-w-4xl overflow-hidden rounded-lg border shadow-lg">
@@ -240,13 +274,13 @@ export function ArticleForm({
         </div>
       )}
 
+      {/* タグ */}
       <div className="space-y-2">
-        <Label htmlFor="tagIds">タグ ID（カンマ区切り）</Label>
-        <Input
-          id="tagIds"
-          value={tagIdsInput}
-          onChange={(e) => setTagIdsInput(e.target.value)}
-          placeholder="TAG_ID_1, TAG_ID_2"
+        <Label>タグ</Label>
+        <TagInput
+          value={tags}
+          onChange={setTags}
+          suggestions={tagSuggestions}
         />
       </div>
 

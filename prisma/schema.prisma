@@ -36,6 +36,18 @@ model Article {
   @@map("articles")
 }
 
+model Tag {
+  id             String   @id @db.Char(26)
+  tenantId       String   @map("tenant_id") @db.Char(26)
+  name           String   @db.VarChar(50)
+  normalizedName String   @map("normalized_name") @db.VarChar(50)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@unique([tenantId, normalizedName])
+  @@index([tenantId])
+  @@map("tags")
+}
+
 model ArticleTag {
   articleId String   @map("article_id") @db.Char(26)
   tagId     String   @map("tag_id") @db.Char(26)

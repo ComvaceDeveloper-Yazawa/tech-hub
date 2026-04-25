@@ -13,15 +13,13 @@ export default async function ArticleEditPage({
   const { id } = await params;
   const article = await getArticleById({ articleId: id });
 
-  if (!article) {
-    notFound();
-  }
+  if (!article) notFound();
 
   async function handleSubmit(data: {
     title: string;
     content: string;
     slug: string;
-    tagIds?: string[];
+    tagNames?: string[];
   }) {
     'use server';
     await updateArticle({ articleId: id, ...data });
@@ -38,7 +36,7 @@ export default async function ArticleEditPage({
           title: article.title,
           content: article.content,
           slug: article.slug,
-          tagIds: article.tagIds,
+          tagNames: article.tagNames,
         }}
         onSubmit={handleSubmit}
       />

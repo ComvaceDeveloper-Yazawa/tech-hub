@@ -18,6 +18,7 @@ export async function getArticleById(input: { articleId: string }): Promise<{
   createdAt: string;
   updatedAt: string;
   tagIds: string[];
+  tagNames: string[];
 } | null> {
   const validated = getArticleByIdInputSchema.parse(input);
 
@@ -28,6 +29,20 @@ export async function getArticleById(input: { articleId: string }): Promise<{
   const article = await repository.findById(articleId, tenantId);
 
   if (!article) return null;
+
+  // タグIDからタグ名を取得
+  const tagIdStrings = article.tagIds.map((t) => t.toString());
+  const tagNames: string[] = [];
+  if (tagIdStrings.length > 0) {
+    const tags = await prisma.tag.findMany({
+      where: { id: { in: tagIdStrings } },
+    });
+    const tagMap = new Map(tags.map((t) => [t.id, t.name]));
+    tagIdStrings.forEach((id) => {
+      const name = tagMap.get(id);
+      if (name) tagNames.push(name);
+    });
+  }
 
   return {
     id: article.id.toString(),
@@ -40,6 +55,7 @@ export async function getArticleById(input: { articleId: string }): Promise<{
     publishedAt: article.publishedAt?.toISOString() ?? null,
     createdAt: article.createdAt.toISOString(),
     updatedAt: article.updatedAt.toISOString(),
-    tagIds: article.tagIds.map((t) => t.toString()),
+    tagIds: tagIdStrings,
+    tagNames,
   };
 }

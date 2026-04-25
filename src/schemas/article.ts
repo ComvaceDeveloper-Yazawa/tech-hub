@@ -14,7 +14,7 @@ export const createArticleInputSchema = z.object({
   title: z.string().min(1).max(100),
   content: z.string(),
   slug: slugSchema,
-  tagIds: z.array(ulidSchema).optional(),
+  tagNames: z.array(z.string().min(1).max(50)).optional(),
 });
 
 export const updateArticleInputSchema = z.object({
@@ -22,7 +22,7 @@ export const updateArticleInputSchema = z.object({
   title: z.string().min(1).max(100).optional(),
   content: z.string().optional(),
   slug: slugSchema.optional(),
-  tagIds: z.array(ulidSchema).optional(),
+  tagNames: z.array(z.string().min(1).max(50)).optional(),
 });
 
 export const publishArticleInputSchema = z.object({

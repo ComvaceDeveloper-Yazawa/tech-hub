@@ -11,12 +11,13 @@ import { TagId } from '@/contexts/shared-kernel/TagId';
 import { PrismaArticleRepository } from '@/contexts/publishing/infrastructure/PrismaArticleRepository';
 import { NoopDomainEventPublisher } from '@/lib/event-publisher';
 import { prisma } from '@/lib/prisma';
+import { upsertTags } from '@/presentation/actions/upsertTags';
 
 export async function createArticle(input: {
   title: string;
   content: string;
   slug: string;
-  tagIds?: string[];
+  tagNames?: string[];
 }): Promise<{ articleId: string }> {
   const validated = createArticleInputSchema.parse(input);
 
@@ -24,9 +25,11 @@ export async function createArticle(input: {
   const content = ArticleContent.fromString(validated.content);
   const slug = Slug.fromString(validated.slug);
   const tenantId = TenantId.personal();
-  // TODO: Get authorId from Supabase Auth session
   const authorId = UserId.fromString('00000000000000000000000001');
-  const tagIds = validated.tagIds?.map((id) => TagId.fromString(id));
+
+  // タグ名をupsertしてIDに変換
+  const tagIdStrings = await upsertTags(validated.tagNames ?? []);
+  const tagIds = tagIdStrings.map((id) => TagId.fromString(id));
 
   const repository = new PrismaArticleRepository(prisma);
   const eventPublisher = new NoopDomainEventPublisher();

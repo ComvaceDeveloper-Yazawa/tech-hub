@@ -7,7 +7,7 @@ export default function ArticleCreatePage() {
     title: string;
     content: string;
     slug: string;
-    tagIds?: string[];
+    tagNames?: string[];
   }) {
     'use server';
     await createArticle(data);
