@@ -49,23 +49,20 @@ export default async function AdminArticleListPage({
 
       <Tabs defaultValue={activeTab}>
         <TabsList>
-          <TabsTrigger value="all">
-            <Link href="/admin/articles" className="block w-full">
-              全て
-            </Link>
+          <TabsTrigger value="all" render={<Link href="/admin/articles" />}>
+            全て
           </TabsTrigger>
-          <TabsTrigger value="draft">
-            <Link href="/admin/articles?status=draft" className="block w-full">
-              下書き
-            </Link>
+          <TabsTrigger
+            value="draft"
+            render={<Link href="/admin/articles?status=draft" />}
+          >
+            下書き
           </TabsTrigger>
-          <TabsTrigger value="published">
-            <Link
-              href="/admin/articles?status=published"
-              className="block w-full"
-            >
-              公開済み
-            </Link>
+          <TabsTrigger
+            value="published"
+            render={<Link href="/admin/articles?status=published" />}
+          >
+            公開済み
           </TabsTrigger>
         </TabsList>
 
@@ -96,7 +93,16 @@ export default async function AdminArticleListPage({
                   result.items.map((article) => (
                     <TableRow key={article.id}>
                       <TableCell className="max-w-[200px] truncate font-medium">
-                        {article.title}
+                        <Link
+                          href={
+                            article.status === 'published'
+                              ? `/articles/${article.slug}`
+                              : `/admin/articles/${article.id}/edit`
+                          }
+                          className="hover:text-primary hover:underline"
+                        >
+                          {article.title}
+                        </Link>
                       </TableCell>
                       <TableCell>
                         <Badge
