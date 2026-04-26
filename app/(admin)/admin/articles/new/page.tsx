@@ -1,21 +1,9 @@
-import { redirect } from 'next/navigation';
-import { createArticle } from '@/presentation/actions/createArticle';
 import { listTags } from '@/presentation/actions/listTags';
+import { handleArticleCreate } from '@/presentation/actions/handleArticleCreate';
 import { ArticleForm } from '@/components/features/ArticleForm';
 
 export default async function ArticleCreatePage() {
   const tags = await listTags();
-
-  async function handleSubmit(data: {
-    title: string;
-    content: string;
-    slug: string;
-    tagNames?: string[];
-  }) {
-    'use server';
-    await createArticle(data);
-    redirect('/admin/articles');
-  }
 
   return (
     <div>
@@ -23,7 +11,7 @@ export default async function ArticleCreatePage() {
       <ArticleForm
         mode="create"
         initialTagSuggestions={tags}
-        onSubmit={handleSubmit}
+        onSubmit={handleArticleCreate}
       />
     </div>
   );
