@@ -1,235 +1,680 @@
-'use client';
+import { PrismaClient } from '@prisma/client';
+import { ulid } from 'ulid';
 
-import { useState, useTransition, useEffect } from 'react';
-import { toast } from 'sonner';
-import { z } from 'zod';
-import { HelpCircleIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RichMarkdownEditor } from '@/components/features/RichMarkdownEditor';
-import { TagInput } from '@/components/features/TagInput';
-import { listTags, type TagItem } from '@/presentation/actions/listTags';
-import { useLoading } from '@/contexts/loading/LoadingContext';
+const prisma = new PrismaClient();
 
-const articleFormSchema = z.object({
-  title: z
-    .string()
-    .min(1, 'タイトルは必須です')
-    .max(100, 'タイトルは100文字以内です'),
-  content: z.string().min(1, '本文は必須です'),
-  slug: z
-    .string()
-    .min(1, 'スラッグは必須です')
-    .regex(
-      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-      'スラッグは英小文字・数字・ハイフンのみです'
-    ),
+const TENANT_ID = '00000000000000000000000000';
+const AUTHOR_ID = '00000000000000000000000001';
+
+const CB3 = '```';
+
+const content = `# 今後の拡張プラン — このサービスが目指す次のステージ
+
+## はじめに
+
+これまで本サービスでは、Webエンジニアリングの入門記事シリーズを中心に、**未経験者が実務レベルに到達するための知識**を発信してきました。
+
+しかし、「記事を読む」だけで終わるサービスにはしたくありません。**読者同士が繋がり、互いのキャリアを支え合うプラットフォーム**へと進化させていきたい。
+
+本記事では、今後実装していく**8つの拡張プラン**をロードマップとしてお届けします。ユーザーの皆さんが「次に何が来るのか」を知り、楽しみにしていただけたら嬉しいです。
+
+> [!NOTE]
+> 本記事は運営からの**プロダクトロードマップ**です。優先順位・実装時期は予告なく変更される場合があります。皆さまからのフィードバックを随時反映していきますので、ぜひご意見をお寄せください。
+
+## TL;DR
+
+今後実装予定の8つの拡張：
+
+1. **ヘッダー整理** — 管理・ブックマークをマイページに統合
+2. **ロール分離** — 一般ユーザーと管理者の役割を明確化
+3. **コメント機能** — 記事で対話できる場を提供
+4. **一覧からの操作** — ブックマーク・いいねを記事一覧から実行
+5. **バーチャルオフィス** — アバターで集まれる仮想空間
+6. **スキルシート作成** — UIから職歴・スキルを登録
+7. **SNS運営統合** — エンゲージメントを高める発信基盤
+8. **経歴紹介機能** — キャリアを魅力的に見せるページ
+
+## 目次
+
+- [拡張プランの全体像](#拡張プランの全体像)
+- [① ヘッダー整理 — マイページへの統合](#-ヘッダー整理--マイページへの統合)
+- [② ユーザーロールの分離](#-ユーザーロールの分離)
+- [③ 記事コメント機能](#-記事コメント機能)
+- [④ 記事一覧からのブックマーク・いいね](#-記事一覧からのブックマークいいね)
+- [⑤ バーチャルオフィスとアバター](#-バーチャルオフィスとアバター)
+- [⑥ スキルシート作成機能](#-スキルシート作成機能)
+- [⑦ SNS運営の統合](#-sns運営の統合)
+- [⑧ 経歴紹介機能](#-経歴紹介機能)
+- [実装ロードマップ](#実装ロードマップ)
+
+## 拡張プランの全体像
+
+### プラットフォームとしての進化
+
+現在の本サービスは「**記事を読む場所**」。これを「**エンジニアが集い、成長し、繋がる場所**」へと進化させていきます。
+
+${CB3}mermaid
+graph LR
+    A[記事を読む<br/>現在] --> B[記事で対話<br/>コメント機能]
+    B --> C[プロフィールで繋がる<br/>スキル・経歴]
+    C --> D[バーチャル空間で会う<br/>アバター・オフィス]
+    D --> E[一つのコミュニティ<br/>目指す姿]
+${CB3}
+
+### 3つのテーマ
+
+8つの拡張は、以下の3つのテーマに整理できます。
+
+| テーマ | 該当プラン |
+|---|---|
+| **UX改善** | ①ヘッダー整理、④一覧からの操作 |
+| **コミュニティ化** | ③コメント、⑤バーチャルオフィス、⑦SNS統合 |
+| **キャリア支援** | ②ロール分離、⑥スキルシート、⑧経歴紹介 |
+
+各プランを詳しく見ていきましょう。
+
+## ① ヘッダー整理 — マイページへの統合
+
+### 現状の課題
+
+現在のヘッダーには**管理・ブックマーク**などのリンクが並んでいます。しかし：
+
+- ユーザーに関する機能がヘッダーに散らばっている
+- 機能が増えるほどヘッダーが混雑する
+- スマホ表示で窮屈
+
+### 改善案
+
+**マイページに統合**し、ヘッダーはシンプルに保ちます。
+
+${CB3}mermaid
+graph TD
+    A[ヘッダー Before<br/>ホーム / 記事 / 管理 / ブックマーク / ログイン] --> B[ヘッダー After<br/>ホーム / 記事 / マイページ]
+    B --> C[マイページ内<br/>ブックマーク・投稿履歴・設定・管理<br/>を統合]
+${CB3}
+
+### 期待する効果
+
+- ✅ ヘッダーがシンプルに
+- ✅ ユーザー関連機能が一箇所に集約
+- ✅ スマホでも使いやすい
+- ✅ 新機能を追加してもヘッダーを汚さない
+
+### マイページの構成イメージ
+
+${CB3}
+マイページ
+├── プロフィール
+├── 投稿した記事
+├── ブックマーク一覧
+├── いいねした記事
+├── アカウント設定
+└── 管理画面（管理者のみ）
+${CB3}
+
+## ② ユーザーロールの分離
+
+### 現状の課題
+
+現在は**全ユーザーが同じ権限**を持っています。しかしサービスが育つと：
+
+- 投稿の監視・モデレーションが必要
+- 不適切なコメントの削除
+- ユーザー管理・サポート
+- 統計情報の閲覧
+
+こうした機能を**誰でも使える状態は危険**です。
+
+### 改善案: ロールベースの権限管理
+
+${CB3}mermaid
+graph TD
+    A[ユーザー] --> B{ロール}
+    B -->|一般ユーザー| C[記事閲覧<br/>コメント<br/>ブックマーク<br/>いいね]
+    B -->|管理者| D[一般ユーザー機能<br/>+<br/>記事管理<br/>ユーザー管理<br/>通報対応<br/>統計閲覧]
+${CB3}
+
+### 管理者向けに拡充する機能
+
+| 機能 | 説明 |
+|---|---|
+| **ダッシュボード** | アクセス数・新規ユーザー等の可視化 |
+| **ユーザー管理** | 一覧・凍結・権限変更 |
+| **コンテンツモデレーション** | 通報対応・不適切投稿の削除 |
+| **記事管理** | 編集・削除・ピン留め |
+| **お知らせ配信** | 全ユーザーへの通知 |
+| **監査ログ** | 誰が何をしたかの記録 |
+
+### 技術的なアプローチ
+
+データベースの \`users\` テーブルに \`role\` カラムを追加：
+
+${CB3}sql
+ALTER TABLE users ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'user'
+  CHECK (role IN ('user', 'admin'));
+${CB3}
+
+APIレベルで権限チェック：
+
+${CB3}ts
+// 管理者のみアクセス可能
+app.delete('/admin/users/:id', requireAdmin, async (req, res) => {
+  // ...
 });
+${CB3}
 
-interface ArticleFormProps {
-  mode: 'create' | 'edit';
-  defaultValues?: {
-    articleId?: string;
-    title?: string;
-    content?: string;
-    slug?: string;
-    tagNames?: string[];
-  };
-  initialTagSuggestions?: TagItem[];
-  onSubmit: (data: {
-    title: string;
-    content: string;
-    slug: string;
-    tagNames?: string[];
-  }) => Promise<void>;
+将来的には **role-based access control (RBAC)** として、より細かい権限制御（編集者、モデレーター等）も検討しています。
+
+## ③ 記事コメント機能
+
+### 目指すもの
+
+記事を読んで「**質問したい**」「**感想を共有したい**」と思うこと、ありますよね。現在はその場がありません。
+
+コメント機能で、**記事を起点とした対話の場**を提供します。
+
+### 機能の要件
+
+- 記事に対するコメント投稿
+- コメントへの返信（ネスト）
+- いいね・通報
+- 著者からの返信表示（目立つように）
+- 通報・削除機能（モデレーション）
+
+### 画面イメージ
+
+${CB3}
+記事本文
+━━━━━━━━━━━━━━━━━━━━━━
+💬 コメント (12)
+
+  [Taroさん] 2026/05/01
+  とても参考になりました！質問なのですが...
+    ↳ [著者] Taroさんコメントありがとうございます！...
+    ↳ [Hanakoさん] 私も同じ疑問がありました
+
+  [Jiroさん] 2026/05/02
+  記事中のコード例、動かしてみました！
+    ↳ [著者] 動きましたか、良かった！
+━━━━━━━━━━━━━━━━━━━━━━
+[コメントを書く...]
+${CB3}
+
+### データベース設計
+
+${CB3}sql
+CREATE TABLE comments (
+  id VARCHAR(26) PRIMARY KEY,
+  article_id VARCHAR(26) NOT NULL REFERENCES articles(id),
+  parent_id VARCHAR(26) REFERENCES comments(id),
+  author_id VARCHAR(26) NOT NULL REFERENCES users(id),
+  content TEXT NOT NULL,
+  like_count INTEGER NOT NULL DEFAULT 0,
+  deleted_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_comments_article ON comments(article_id, created_at DESC);
+CREATE INDEX idx_comments_parent ON comments(parent_id);
+${CB3}
+
+\`parent_id\` で**コメントスレッド**を表現します。
+
+### 荒れないコミュニティ運営のために
+
+- **初期は承認制**（管理者が目視確認）
+- 通報機能でユーザー同士でも健全化
+- AIによる自動モデレーション（予定）
+- ガイドラインの明示
+
+## ④ 記事一覧からのブックマーク・いいね
+
+### 現状の課題
+
+現在、記事をブックマーク/いいねするには：
+
+1. 記事一覧から記事を開く
+2. 記事詳細ページでボタンを押す
+3. 戻る
+
+**3ステップ**かかります。面倒。
+
+### 改善案: 一覧画面でのワンクリック操作
+
+${CB3}
+📰 記事一覧
+━━━━━━━━━━━━━━━━━━━━━━
+[サムネイル] React入門
+Taroさん・5分で読める・2025/04/01
+                        🔖  ❤️ 42
+[サムネイル] Node.js解説
+Hanakoさん・8分で読める・2025/04/02
+                        🔖  ❤️ 28
+━━━━━━━━━━━━━━━━━━━━━━
+${CB3}
+
+記事を開かずに**カード上のアイコンをタップ**するだけ。
+
+### 期待する効果
+
+- ✅ 気になる記事を**流し見しながらストック**できる
+- ✅ エンゲージメント（いいね数）が増える
+- ✅ UX が「スッ」と気持ちよくなる
+
+### 実装上の工夫
+
+#### 楽観的UI（Optimistic UI）
+
+APIレスポンスを待たず、**クリック直後にUIを更新**。
+
+${CB3}ts
+const handleLike = async (articleId) => {
+  // 1. 即座にUIを更新（ハート赤く）
+  setLiked(true);
+  setCount(count + 1);
+
+  // 2. 裏でAPI実行
+  try {
+    await api.like(articleId);
+  } catch (err) {
+    // 失敗時は元に戻す
+    setLiked(false);
+    setCount(count - 1);
+  }
+};
+${CB3}
+
+**体感速度を最大化**するテクニックです。
+
+#### 未ログイン時の扱い
+
+未ログインでいいねを押したら、ログイン画面に誘導。押した意図は記憶し、ログイン後に自動で反映。
+
+## ⑤ バーチャルオフィスとアバター
+
+### もっとも野心的な機能
+
+単なる「記事サイト」から、**エンジニアが集まるバーチャル空間**への進化。
+
+### 機能の要件
+
+#### アバター作成
+
+- 顔・髪型・服装をカスタマイズ
+- 2D/3Dアバター選択可能
+- GitHub/Twitter アバターと連携
+
+#### バーチャルオフィス
+
+- ブラウザで入れる仮想空間
+- 部屋（会議室・ラウンジ・雑談部屋）
+- 近づくと音声通話がつながる（**プロキシミティチャット**）
+- 画面共有・ホワイトボード
+
+### 使い方のイメージ
+
+${CB3}mermaid
+graph TD
+    A[マイページから入室] --> B[自分のアバターで<br/>ロビーに到着]
+    B --> C{どこに行く？}
+    C -->|雑談ラウンジ| D[他のユーザーと<br/>自由に話す]
+    C -->|技術相談室| E[質問を投げて<br/>有志と議論]
+    C -->|もくもく部屋| F[一緒に作業<br/>BGMあり]
+    C -->|イベント会場| G[勉強会・LT大会]
+${CB3}
+
+### なぜバーチャルオフィスなのか
+
+#### リモートワーク時代の孤独感
+
+未経験者やフリーランスは特に「**一緒に働く仲間**」がいない孤独を抱えがち。バーチャルオフィスは、**ゆるく繋がる**場を提供します。
+
+#### 偶発的な出会い
+
+文字だけのチャットでは生まれない「**何となく声をかける**」「**作業中に隣に座る**」ような偶発性を再現。これが**新しいコラボ**を生みます。
+
+#### 心理的ハードルの低さ
+
+- Zoom のような「会議を設定して接続」ではなく、**ふらっと入れる**
+- アバターなので顔出し不要
+- 聞き専もOK
+
+### 技術的なアプローチ
+
+- **WebRTC**: ブラウザ間のP2P音声・映像通信
+- **WebSocket**: リアルタイム位置情報の同期
+- **Canvas / Three.js**: 2D/3D描画
+- 既存の Gather / oVice のようなサービス知見を参考に
+
+## ⑥ スキルシート作成機能
+
+### 現状の課題
+
+エンジニアにとって**スキルシート/職務経歴書**は転職・案件獲得の必須ドキュメント。しかし：
+
+- Excelで作っているが書式がバラバラ
+- 更新が面倒
+- 複数の会社・エージェントに出すたびに調整が必要
+
+### 改善案: UIからスキルシートを作成・出力
+
+${CB3}
+スキルシート編集画面
+━━━━━━━━━━━━━━━━━━━━━━
+【基本情報】
+氏名: [Taro Yamada]
+最終学歴: [〇〇大学]
+IT経験年数: [3年]
+
+【スキル】
+言語: [+追加]
+  - TypeScript  経験3年  ★★★★☆
+  - Python       経験2年  ★★★☆☆
+  - Go            経験1年  ★★☆☆☆
+
+フレームワーク: [+追加]
+  - React  経験3年  ★★★★☆
+  - Next.js 経験2年  ★★★★☆
+
+【プロジェクト経歴】
+[+プロジェクトを追加]
+
+[プレビュー] [PDF出力] [共有URL発行]
+━━━━━━━━━━━━━━━━━━━━━━
+${CB3}
+
+### 機能の要件
+
+- 項目別にフォーム入力
+- スキルレベルは5段階で視覚化
+- プロジェクト経歴をタイムライン形式で管理
+- **PDF出力**（複数テンプレート）
+- **共有URL**でオンラインでも見せられる
+- プライバシー設定（公開/限定公開/非公開）
+
+### データ構造（抜粋）
+
+${CB3}sql
+CREATE TABLE skill_sheets (
+  id VARCHAR(26) PRIMARY KEY,
+  user_id VARCHAR(26) NOT NULL REFERENCES users(id),
+  basic_info JSONB,
+  summary TEXT,
+  visibility VARCHAR(20) DEFAULT 'private',
+  share_token VARCHAR(64) UNIQUE,
+  updated_at TIMESTAMPTZ
+);
+
+CREATE TABLE skill_sheet_skills (
+  id VARCHAR(26) PRIMARY KEY,
+  sheet_id VARCHAR(26) REFERENCES skill_sheets(id),
+  category VARCHAR(50),
+  name VARCHAR(100),
+  years DECIMAL(3,1),
+  level INTEGER CHECK (level BETWEEN 1 AND 5)
+);
+
+CREATE TABLE skill_sheet_projects (
+  id VARCHAR(26) PRIMARY KEY,
+  sheet_id VARCHAR(26) REFERENCES skill_sheets(id),
+  title VARCHAR(200),
+  role VARCHAR(100),
+  period_from DATE,
+  period_to DATE,
+  description TEXT,
+  tech_stack TEXT[]
+);
+${CB3}
+
+### AIアシスタントとの連携
+
+将来的には、**AIがスキルシートを改善提案**する機能も視野に入れています。
+
+${CB3}
+AI: 「プロジェクト概要の書き方、数値を入れるとより説得力が増しますよ。
+    例えば『パフォーマンスを改善』ではなく
+    『レスポンスタイムを2秒→300msに改善』など。」
+${CB3}
+
+## ⑦ SNS運営の統合
+
+### 目指すもの
+
+**サービス単体ではなく、SNSと連携して発信力を高める**。
+
+### 機能の要件
+
+#### 記事のSNS連携
+
+- 記事投稿と同時にX（Twitter）・LinkedIn等に自動シェア
+- OGP画像の自動生成（タイトル・著者入り）
+- 「読みました」ボタンでシェアしやすく
+
+#### プロフィールとSNS連携
+
+- X・GitHub・Zenn・Qiita のリンク登録
+- 相互フォロー促進
+- RSS配信機能
+
+#### サービス公式SNS運営
+
+- 注目記事を公式アカウントで紹介
+- 新機能・イベント告知
+- ユーザーハイライト（頑張ってる人をフィーチャー）
+
+### 期待する効果
+
+${CB3}mermaid
+graph LR
+    A[記事公開] --> B[公式SNSで紹介]
+    B --> C[外部流入]
+    C --> D[新規ユーザー]
+    D --> E[記事執筆]
+    E --> A
+${CB3}
+
+**サービス内外を循環するエンゲージメントの輪**を作ります。
+
+### OGP自動生成の技術
+
+${CB3}ts
+// 記事公開時に自動で OGP 画像を生成
+await generateOgImage({
+  title: article.title,
+  author: article.author.name,
+  tags: article.tags,
+  outputPath: \`/og/\${article.id}.png\`,
+});
+${CB3}
+
+Vercel OG や Satori を使ったサーバーサイド画像生成を予定。
+
+## ⑧ 経歴紹介機能
+
+### 現状の課題
+
+スキルシートは**業務向けの真面目な書類**。一方で、**もっとカジュアルに自分を伝えたい**場面もあります。
+
+- 転職活動前の自己紹介ページ
+- 副業相談のための入口
+- 技術コミュニティでの自己PR
+
+### 改善案: ストーリー性のある経歴ページ
+
+LinkedInやNotion公開ページに近い、**読み物として魅力的な経歴紹介**。
+
+${CB3}
+Taro Yamada
+━━━━━━━━━━━━━━━━━━━━━━
+Webエンジニア | 未経験から3年でフルスタックへ
+
+📖 これまでの道のり
+
+2022 🎓 大学卒業（経済学部）
+      ↓ 「ものづくりしたい」と独学開始
+2023 💻 Webスクール受講 → 初転職
+      ↓ 1年目、Reactでフロント開発
+2024 🚀 スタートアップへ転職
+      ↓ 2年目、Node.js でバックエンドも
+2025 ⭐ テックリードとして活躍
+      ↓ 3年目、チームを率いる
+
+🏆 代表作
+  - [リンク] TODOアプリ（Next.js + Prisma）
+  - [リンク] AIチャットボット（OpenAI API）
+
+🎯 今後やりたいこと
+  フルスタックエンジニアとして、
+  ユーザーの生活を変えるプロダクトを作りたい。
+
+[お仕事の相談] [SNSをフォロー]
+━━━━━━━━━━━━━━━━━━━━━━
+${CB3}
+
+### 機能の要件
+
+- タイムライン形式の経歴表示
+- ハイライト（代表作・受賞歴）
+- 「やりたいこと」「興味」の表明
+- カスタムURL（\`/u/taro\`）
+- デザインテンプレート複数
+- 公開/非公開の切替
+- 連絡先・問い合わせフォーム
+
+### ポートフォリオサイトの代替として
+
+現在、エンジニアが別途ポートフォリオサイトを作るコストは大きい。本機能で：
+
+- ✅ **別サーバー契約不要**
+- ✅ **HTMLを書けなくてもOK**
+- ✅ **スキルシート・記事と連動**
+
+→ **「これ一つあれば転職活動OK」**を目指します。
+
+## 実装ロードマップ
+
+### 優先順位とフェーズ
+
+${CB3}mermaid
+graph TD
+    A[Phase 1<br/>2026 Q2] --> B[①ヘッダー整理<br/>②ロール分離<br/>④一覧操作]
+    C[Phase 2<br/>2026 Q3] --> D[③コメント機能<br/>⑥スキルシート<br/>⑧経歴紹介]
+    E[Phase 3<br/>2026 Q4〜2027] --> F[⑤バーチャルオフィス<br/>⑦SNS統合<br/>AI機能拡充]
+${CB3}
+
+### Phase 1: 基盤整備（短期）
+
+**UX改善と権限管理の土台作り**。
+
+- ①ヘッダー整理
+- ②ロール分離
+- ④記事一覧からの操作
+
+**期間**: 2026 Q2
+
+### Phase 2: コミュニティとキャリア支援（中期）
+
+**ユーザーが積極的に使う機能群**。
+
+- ③コメント機能
+- ⑥スキルシート
+- ⑧経歴紹介
+
+**期間**: 2026 Q3
+
+### Phase 3: 野心的機能（長期）
+
+**サービスを象徴する差別化機能**。
+
+- ⑤バーチャルオフィス
+- ⑦SNS統合
+- AI機能の深化
+
+**期間**: 2026 Q4〜2027
+
+### リリース形態
+
+全機能を一気にリリースせず、**段階的に公開**します。
+
+- **β版**: 一部ユーザーで先行テスト
+- **フィードバック反映**: 改善してから本リリース
+- **公開後も継続改善**: ユーザーの声を最優先
+
+## ユーザーの皆さまへのお願い
+
+### フィードバックを歓迎します
+
+本ロードマップは**あくまで現時点の構想**。以下の形でご意見をお待ちしています。
+
+- 記事のコメント欄（実装後）
+- お問い合わせフォーム
+- 公式SNS
+
+### 特に知りたいこと
+
+- 「**これは早く実装してほしい**」という機能はありますか？
+- 「**これは不要では？**」と感じる機能はありますか？
+- 「**こういう機能もあったら**」という追加要望は？
+
+皆さまの声が、本サービスの方向性を決めます。
+
+## まとめ: 一緒に作っていくサービス
+
+### 本記事で紹介した8つの拡張
+
+| # | 機能 | テーマ |
+|---|---|---|
+| ① | ヘッダー整理 | UX改善 |
+| ② | ロール分離 | 運営基盤 |
+| ③ | コメント機能 | コミュニティ |
+| ④ | 一覧からの操作 | UX改善 |
+| ⑤ | バーチャルオフィス | コミュニティ |
+| ⑥ | スキルシート | キャリア支援 |
+| ⑦ | SNS統合 | エンゲージメント |
+| ⑧ | 経歴紹介 | キャリア支援 |
+
+### 目指す姿
+
+> [!IMPORTANT]
+> 本サービスは、**読者の成長を支えるプラットフォーム**を目指しています。記事を読むだけでなく、**仲間と繋がり、スキルを可視化し、キャリアを築く**。そんな場所を、皆さまと一緒に作っていきます。
+
+### 最後に
+
+ロードマップは**生き物**です。技術の進化・ユーザーの声・市場の変化に合わせて、柔軟に進化させていきます。
+
+**皆さまのフィードバックが、このサービスの未来を作ります**。どうぞ今後ともよろしくお願いいたします。
+
+次の記事でお会いしましょう。**Happy Hacking!** 🚀
+`;
+
+async function main() {
+  const articleId = ulid();
+  const now = new Date();
+
+  await prisma.article.create({
+    data: {
+      id: articleId,
+      tenantId: TENANT_ID,
+      title: '今後の拡張プラン — このサービスが目指す次のステージ',
+      content,
+      status: 'published',
+      slug: 'future-expansion-roadmap',
+      authorId: AUTHOR_ID,
+      viewCount: 0,
+      likeCount: 0,
+      publishedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    },
+  });
+
+  console.log(`✅ 記事を作成しました: ${articleId}`);
 }
 
-export function ArticleForm({
-  mode,
-  defaultValues,
-  initialTagSuggestions = [],
-  onSubmit,
-}: ArticleFormProps) {
-  const [title, setTitle] = useState(defaultValues?.title ?? '');
-  const [content, setContent] = useState(defaultValues?.content ?? '');
-  const [slug, setSlug] = useState(defaultValues?.slug ?? '');
-  const [tags, setTags] = useState<string[]>(defaultValues?.tagNames ?? []);
-  const [tagSuggestions, setTagSuggestions] = useState<TagItem[]>(
-    initialTagSuggestions
-  );
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formError, setFormError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-  const [showSlugTooltip, setShowSlugTooltip] = useState(false);
-  const { showLoading, hideLoading } = useLoading();
-
-  // 既存タグを取得（initialTagSuggestionsが空の場合のフォールバック）
-  useEffect(() => {
-    if (initialTagSuggestions.length > 0) return;
-    listTags()
-      .then(setTagSuggestions)
-      .catch(() => {});
-  }, [initialTagSuggestions.length]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors({});
-    setFormError(null);
-
-    const parsed = articleFormSchema.safeParse({ title, content, slug });
-    if (!parsed.success) {
-      const fieldErrors: Record<string, string> = {};
-      for (const issue of parsed.error.issues) {
-        const field = issue.path[0];
-        if (field && typeof field === 'string')
-          fieldErrors[field] = issue.message;
-      }
-      setErrors(fieldErrors);
-      return;
-    }
-
-    startTransition(async () => {
-      showLoading();
-      try {
-        await onSubmit({
-          title,
-          content,
-          slug,
-          tagNames: tags.length > 0 ? tags : undefined,
-        });
-      } catch (error) {
-        if (
-          error instanceof Error &&
-          (error.message === 'NEXT_REDIRECT' ||
-            (error as { digest?: string }).digest?.startsWith('NEXT_REDIRECT'))
-        ) {
-          hideLoading();
-          throw error;
-        }
-        hideLoading();
-        setFormError(
-          error instanceof Error ? error.message : '保存に失敗しました'
-        );
-      }
-    });
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {formError && (
-        <div
-          role="alert"
-          className="border-destructive/50 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
-        >
-          {formError}
-        </div>
-      )}
-
-      {/* タイトル */}
-      <div className="space-y-2">
-        <Label htmlFor="title">タイトル</Label>
-        <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          maxLength={100}
-          placeholder="記事のタイトル"
-          aria-invalid={!!errors.title}
-        />
-        {errors.title && (
-          <p role="alert" className="text-destructive text-sm">
-            {errors.title}
-          </p>
-        )}
-      </div>
-
-      {/* スラッグ */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-1.5">
-          <Label htmlFor="slug">スラッグ</Label>
-          <div className="relative">
-            <button
-              type="button"
-              onMouseEnter={() => setShowSlugTooltip(true)}
-              onMouseLeave={() => setShowSlugTooltip(false)}
-              onFocus={() => setShowSlugTooltip(true)}
-              onBlur={() => setShowSlugTooltip(false)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="スラッグとは"
-            >
-              <HelpCircleIcon className="h-4 w-4" />
-            </button>
-            {showSlugTooltip && (
-              <div className="bg-popover border-border absolute bottom-full left-1/2 z-50 mb-2 w-72 -translate-x-1/2 rounded-lg border p-3 text-xs shadow-lg">
-                <p className="text-foreground mb-1 font-medium">
-                  スラッグとは？
-                </p>
-                <p className="text-muted-foreground leading-relaxed">
-                  URLに使われる識別子です。例えばスラッグが{' '}
-                  <code className="bg-muted rounded px-1">my-first-post</code>{' '}
-                  の場合、記事のURLは
-                  <code className="bg-muted rounded px-1">
-                    /articles/my-first-post
-                  </code>{' '}
-                  になります。
-                </p>
-                <p className="text-muted-foreground mt-1.5 leading-relaxed">
-                  英小文字・数字・ハイフンのみ使用可能です。
-                </p>
-                {/* 吹き出しの矢印 */}
-                <div className="border-popover absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-current" />
-              </div>
-            )}
-          </div>
-        </div>
-        <Input
-          id="slug"
-          value={slug}
-          onChange={(e) => setSlug(e.target.value)}
-          placeholder="my-first-post"
-          aria-invalid={!!errors.slug}
-        />
-        {errors.slug && (
-          <p role="alert" className="text-destructive text-sm">
-            {errors.slug}
-          </p>
-        )}
-      </div>
-
-      {/* 本文 */}
-      <div className="space-y-2">
-        <Label htmlFor="content">本文</Label>
-        <RichMarkdownEditor
-          value={content}
-          onChange={setContent}
-          height={500}
-          articleId={defaultValues?.articleId ?? 'new'}
-        />
-        {errors.content && (
-          <p role="alert" className="text-destructive text-sm">
-            {errors.content}
-          </p>
-        )}
-      </div>
-
-      {/* タグ */}
-      <div className="space-y-2">
-        <Label>タグ</Label>
-        <TagInput
-          value={tags}
-          onChange={setTags}
-          suggestions={tagSuggestions}
-        />
-      </div>
-
-      <Button type="submit" disabled={isPending}>
-        {isPending
-          ? '保存中...'
-          : mode === 'create'
-            ? '記事を作成'
-            : '記事を更新'}
-      </Button>
-    </form>
-  );
-}
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());
