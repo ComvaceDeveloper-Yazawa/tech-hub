@@ -216,7 +216,7 @@ export function RichMarkdownEditor({
           style={{ height: `${height}px` }}
         >
           {value.trim() ? (
-            <div className="prose prose-invert prose-sm prose-headings:text-[#e06c75] prose-headings:font-bold prose-p:text-[#abb2bf] prose-p:leading-relaxed prose-strong:text-[#e5c07b] prose-em:text-[#c678dd] prose-code:text-[#e06c75] prose-code:bg-[#3e4451] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-none prose-code:after:content-none prose-pre:bg-[#21252b] prose-pre:border prose-pre:border-[#3e4451] prose-pre:rounded-lg prose-blockquote:border-l-[#528bff] prose-blockquote:text-[#5c6370] prose-blockquote:bg-[#21252b] prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r prose-a:text-[#61afef] prose-a:no-underline hover:prose-a:underline prose-hr:border-[#3e4451] prose-th:text-[#abb2bf] prose-th:bg-[#21252b] prose-td:text-[#abb2bf] prose-li:text-[#abb2bf] prose-img:rounded-lg prose-img:shadow-lg max-w-none">
+            <div className="prose prose-invert prose-sm prose-headings:font-bold prose-code:bg-[#3e4451] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-none prose-code:after:content-none prose-pre:bg-[#21252b] prose-pre:border prose-pre:border-[#3e4451] prose-pre:rounded-lg prose-blockquote:border-l-[#528bff] prose-blockquote:bg-[#21252b] prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r prose-a:no-underline hover:prose-a:underline prose-hr:border-[#3e4451] prose-th:bg-[#21252b] prose-img:rounded-lg prose-img:shadow-lg max-w-none">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw]}
