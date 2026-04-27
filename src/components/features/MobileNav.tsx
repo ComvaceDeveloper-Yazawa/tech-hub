@@ -48,18 +48,11 @@ export function MobileNav({ isAuthenticated }: MobileNavProps) {
             {isAuthenticated ? (
               <>
                 <Link
-                  href="/bookmarks"
+                  href="/mypage"
                   className="hover:bg-muted focus-visible:ring-ring rounded px-2 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
                   onClick={() => setOpen(false)}
                 >
-                  ブックマーク
-                </Link>
-                <Link
-                  href="/admin/articles"
-                  className="hover:bg-muted focus-visible:ring-ring rounded px-2 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                  onClick={() => setOpen(false)}
-                >
-                  管理
+                  マイページ
                 </Link>
                 <div className="px-2 py-2">
                   <LogoutButton />

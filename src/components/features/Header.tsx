@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { MobileNav } from '@/components/features/MobileNav';
 import { LogoutButton } from '@/components/features/LogoutButton';
+import { User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export async function Header() {
   const supabase = await createClient();
@@ -33,17 +35,15 @@ export async function Header() {
           </Link>
           {isAuthenticated ? (
             <>
-              <Link
-                href="/bookmarks"
-                className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded text-sm font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-none"
-              >
-                ブックマーク
-              </Link>
-              <Link
-                href="/admin/articles"
-                className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded text-sm font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-none"
-              >
-                管理
+              <Link href="/mypage" title="マイページ">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none"
+                  aria-label="マイページを開く"
+                >
+                  <User className="size-5" />
+                </Button>
               </Link>
               <LogoutButton />
             </>

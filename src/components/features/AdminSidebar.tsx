@@ -1,26 +1,32 @@
+'use client';
+
 import Link from 'next/link';
-import { headers } from 'next/headers';
+import { usePathname } from 'next/navigation';
 import { FileText, PlusCircle, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 const NAV_ITEMS = [
-  { href: '/admin/articles', label: '記事一覧', icon: FileText },
+  { href: '/admin/articles', label: 'マイ記事管理', icon: FileText },
   { href: '/admin/articles/new', label: '新規作成', icon: PlusCircle },
   { href: '/admin/media', label: 'メディア', icon: ImageIcon },
 ] as const;
 
-export async function AdminSidebar() {
-  const headersList = await headers();
-  const pathname = headersList.get('x-pathname') ?? '';
+export function AdminSidebar() {
+  const pathname = usePathname();
 
   return (
     <aside className="border-border bg-background hidden w-64 shrink-0 border-r md:block">
       <nav className="flex flex-col gap-1 p-4" aria-label="管理ナビゲーション">
         {NAV_ITEMS.map((item) => {
-          const isActive =
-            item.href === '/admin/articles'
-              ? pathname === '/admin/articles'
-              : pathname.startsWith(item.href);
+          let isActive = false;
+          
+          if (item.href === '/admin/articles/new') {
+            isActive = pathname === '/admin/articles/new' || pathname.startsWith('/admin/articles/') && !pathname.startsWith('/admin/articles/new');
+          } else if (item.href === '/admin/articles') {
+            isActive = pathname === '/admin/articles';
+          } else {
+            isActive = pathname.startsWith(item.href);
+          }
 
           return (
             <Link
@@ -29,7 +35,7 @@ export async function AdminSidebar() {
               className={cn(
                 'focus-visible:ring-ring flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none',
                 isActive
-                  ? 'bg-secondary text-foreground'
+                  ? 'border-l-4 border-primary bg-accent text-accent-foreground'
                   : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
               )}
             >

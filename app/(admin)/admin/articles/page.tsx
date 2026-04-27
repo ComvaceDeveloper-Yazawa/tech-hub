@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
 import { listArticles } from '@/presentation/actions/listArticles';
 import { Pagination } from '@/components/features/Pagination';
 import { PublishButton } from '@/components/features/PublishButton';
@@ -38,13 +37,7 @@ export default async function AdminArticleListPage({
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">記事管理</h1>
-        <Link href="/admin/articles/new">
-          <Button aria-label="新規記事を作成">
-            <Plus className="size-4" aria-hidden="true" />
-            新規作成
-          </Button>
-        </Link>
+        <h1 className="text-2xl font-bold">マイ記事管理</h1>
       </div>
 
       <Tabs defaultValue={activeTab}>
