@@ -82,3 +82,89 @@ model ArticleBookmark {
   @@index([tenantId, userId, createdAt])
   @@map("article_bookmarks")
 }
+
+// スキルシート関連モデル
+model SkillSheet {
+  id               String    @id @db.Char(26)
+  tenantId         String    @map("tenant_id") @db.Char(26)
+  userId           String    @map("user_id") @db.Char(26)
+  fullName         String    @map("project_name") @db.VarChar(255)
+  gender           String    @map("scale") @db.VarChar(50)
+  birthDate        DateTime? @map("birth_date") @db.Date
+  nationality      String    @default("") @db.VarChar(100)
+  stationLine      String    @default("") @map("station_line") @db.VarChar(100)
+  nearestStation   String    @default("") @map("nearest_station") @db.VarChar(100)
+  desiredStartDate DateTime  @map("start_date") @db.Date
+  desiredArea      String    @default("") @map("desired_area") @db.VarChar(255)
+  experienceMonths Int       @map("duration_months")
+  selfPr           String    @map("self_introduction") @db.Text
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  projects SkillSheetProject[]
+
+  @@index([tenantId, userId])
+  @@index([userId])
+  @@map("skill_sheets")
+}
+
+model SkillSheetProject {
+  id            String   @id @db.Char(26)
+  skillSheetId  String   @map("skill_sheet_id") @db.Char(26)
+  projectNumber Int      @map("project_number")
+  periodStart   String   @map("period_start") @db.VarChar(100) // 2025年7月など
+  periodEnd     String   @map("period_end") @db.VarChar(100)
+  description   String   @db.Text
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  skillSheet   SkillSheet              @relation(fields: [skillSheetId], references: [id], onDelete: Cascade)
+  tasks        SkillSheetProjectTask[]
+  skills       SkillSheetSkill[]
+  environments SkillSheetEnvironment[]
+
+  @@index([skillSheetId])
+  @@map("skill_sheet_projects")
+}
+
+model SkillSheetProjectTask {
+  id                  String   @id @db.Char(26)
+  skillSheetProjectId String   @map("skill_sheet_project_id") @db.Char(26)
+  category            String   @db.VarChar(100) // 要件分析/設計/開発/テスト等
+  taskDescription     String   @map("task_description") @db.Text
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  project SkillSheetProject @relation(fields: [skillSheetProjectId], references: [id], onDelete: Cascade)
+
+  @@index([skillSheetProjectId])
+  @@map("skill_sheet_project_tasks")
+}
+
+model SkillSheetSkill {
+  id                  String   @id @db.Char(26)
+  skillSheetProjectId String   @map("skill_sheet_project_id") @db.Char(26)
+  category            String   @db.VarChar(50) // 言語/FW/インフラ/ツール/OS
+  skillName           String   @map("skill_name") @db.VarChar(100)
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  project SkillSheetProject @relation(fields: [skillSheetProjectId], references: [id], onDelete: Cascade)
+
+  @@index([skillSheetProjectId])
+  @@index([skillSheetProjectId, category])
+  @@map("skill_sheet_skills")
+}
+
+model SkillSheetEnvironment {
+  id                  String   @id @db.Char(26)
+  skillSheetProjectId String   @map("skill_sheet_project_id") @db.Char(26)
+  environmentType     String   @map("environment_type") @db.VarChar(50) // OS/Tool/Framework
+  value               String   @db.VarChar(100)
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  project SkillSheetProject @relation(fields: [skillSheetProjectId], references: [id], onDelete: Cascade)
+
+  @@index([skillSheetProjectId])
+  @@index([skillSheetProjectId, environmentType])
+  @@map("skill_sheet_environments")
+}

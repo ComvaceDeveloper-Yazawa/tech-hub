@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookmarkIcon, PencilIcon } from 'lucide-react';
+import { BookmarkIcon, PencilIcon, AwardIcon } from 'lucide-react';
 
 export default async function MyPagePage() {
   const supabase = await createClient();
@@ -19,7 +19,7 @@ export default async function MyPagePage() {
     <div className="mx-auto max-w-7xl px-4 py-8">
       <h1 className="mb-8 text-3xl font-bold">マイページ</h1>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         <Link href="/admin/articles">
           <Card className="flex cursor-pointer flex-col items-center justify-center gap-4 p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
             <PencilIcon className="text-primary size-12" />
@@ -39,6 +39,17 @@ export default async function MyPagePage() {
               ブックマークした記事の一覧
             </p>
             <Button className="w-full">ブックマークへ</Button>
+          </Card>
+        </Link>
+
+        <Link href="/skill-sheets">
+          <Card className="flex cursor-pointer flex-col items-center justify-center gap-4 p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+            <AwardIcon className="text-primary size-12" />
+            <h2 className="text-xl font-semibold">スキルシート</h2>
+            <p className="text-muted-foreground text-center text-sm">
+              スキルシートの作成・管理
+            </p>
+            <Button className="w-full">スキルシートへ</Button>
           </Card>
         </Link>
       </div>
