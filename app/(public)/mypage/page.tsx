@@ -21,10 +21,10 @@ export default async function MyPagePage() {
 
       <div className="grid gap-6 md:grid-cols-2">
         <Link href="/admin/articles">
-          <Card className="cursor-pointer flex flex-col items-center justify-center gap-4 p-8 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
-            <PencilIcon className="size-12 text-primary" />
+          <Card className="flex cursor-pointer flex-col items-center justify-center gap-4 p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+            <PencilIcon className="text-primary size-12" />
             <h2 className="text-xl font-semibold">マイ記事</h2>
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-center text-sm">
               あなたが作成した記事の管理
             </p>
             <Button className="w-full">マイ記事へ</Button>
@@ -32,10 +32,10 @@ export default async function MyPagePage() {
         </Link>
 
         <Link href="/bookmarks">
-          <Card className="cursor-pointer flex flex-col items-center justify-center gap-4 p-8 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
-            <BookmarkIcon className="size-12 text-primary" />
+          <Card className="flex cursor-pointer flex-col items-center justify-center gap-4 p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+            <BookmarkIcon className="text-primary size-12" />
             <h2 className="text-xl font-semibold">ブックマーク</h2>
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-center text-sm">
               ブックマークした記事の一覧
             </p>
             <Button className="w-full">ブックマークへ</Button>
