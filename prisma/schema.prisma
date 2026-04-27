@@ -168,3 +168,16 @@ model SkillSheetEnvironment {
   @@index([skillSheetProjectId, environmentType])
   @@map("skill_sheet_environments")
 }
+
+model Profile {
+  id           String   @id @db.Char(26)
+  userId       String   @unique @map("user_id") @db.Char(26)
+  tenantId     String   @map("tenant_id") @db.Char(26)
+  displayName  String   @default("") @map("display_name") @db.VarChar(50)
+  avatarConfig Json?    @map("avatar_config") @db.JsonB
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([tenantId, userId])
+  @@map("profiles")
+}

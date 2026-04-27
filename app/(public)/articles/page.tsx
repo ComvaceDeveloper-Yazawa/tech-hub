@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { listArticles } from '@/presentation/actions/listArticles';
 import { listTags } from '@/presentation/actions/listTags';
+import { checkBulkStatus } from '@/presentation/actions/checkBulkStatus';
 import { ArticleCard } from '@/components/features/ArticleCard';
 import { Pagination } from '@/components/features/Pagination';
 import { SortSelector } from '@/components/features/SortSelector';
@@ -49,6 +50,9 @@ export default async function ArticleListPage({
     createClient().then((s) => s.auth.getUser()),
   ]);
 
+  const articleIds = result.items.map((a) => a.id);
+  const bulkStatus = await checkBulkStatus(articleIds);
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <LoadingDismiss />
@@ -87,7 +91,13 @@ export default async function ArticleListPage({
               className="animate-fade-in-up"
               style={{ animationDelay: `${0.1 + i * 0.05}s` }}
             >
-              <ArticleCard article={article} />
+              <ArticleCard
+                article={article}
+                likeStatus={{ liked: bulkStatus.likes[article.id] ?? false }}
+                bookmarkStatus={{
+                  bookmarked: bulkStatus.bookmarks[article.id] ?? false,
+                }}
+              />
             </div>
           ))}
         </div>

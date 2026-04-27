@@ -41,6 +41,7 @@ export type SkillSheetListItem = {
   desiredStartDate: Date;
   experienceMonths: number;
   gender: string;
+  createdAt: Date;
   updatedAt: Date;
   _count: {
     projects: number;
@@ -173,6 +174,7 @@ export async function listSkillSheets(): Promise<SkillSheetListItem[]> {
       desiredStartDate: true,
       experienceMonths: true,
       gender: true,
+      createdAt: true,
       updatedAt: true,
       _count: {
         select: {

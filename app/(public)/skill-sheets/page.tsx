@@ -10,13 +10,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { listSkillSheets } from '@/presentation/actions/skillSheets';
 import {
   formatExperienceMonths,
   formatReiwaDate,
 } from '@/lib/skill-sheet-format';
-import { Download, FileSpreadsheet, Plus, Printer } from 'lucide-react';
+import { Copy, FileSpreadsheet, Plus, Printer } from 'lucide-react';
 
 export default async function SkillSheetsPage() {
   const supabase = await createClient();
@@ -34,38 +33,53 @@ export default async function SkillSheetsPage() {
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">スキルシート管理</h1>
-        <Link href="/skill-sheets/new">
-          <Button aria-label="新規スキルシートを作成">
-            <Plus className="size-4" aria-hidden="true" />
-            新規作成
-          </Button>
-        </Link>
+        {skillSheets.length > 0 && (
+          <Link href="/skill-sheets/new">
+            <Button aria-label="新規スキルシートを作成">
+              <Plus className="size-4" aria-hidden="true" />
+              新規作成
+            </Button>
+          </Link>
+        )}
       </div>
 
       {skillSheets.length === 0 ? (
-        <div className="border-border rounded-lg border p-6">
-          <p className="text-muted-foreground text-center">
-            スキルシートはまだありません
-          </p>
+        <div className="border-border flex flex-col items-center gap-6 rounded-lg border p-16 text-center">
+          <div className="bg-muted flex h-16 w-16 items-center justify-center rounded-full">
+            <FileSpreadsheet
+              className="text-muted-foreground size-8"
+              aria-hidden="true"
+            />
+          </div>
+          <div>
+            <p className="text-lg font-semibold">スキルシートがありません</p>
+            <p className="text-muted-foreground mt-1 text-sm">
+              最初のスキルシートを作成して経歴を管理しましょう
+            </p>
+          </div>
+          <Link href="/skill-sheets/new">
+            <Button size="lg" aria-label="最初のスキルシートを作成">
+              <Plus className="size-5" aria-hidden="true" />
+              スキルシートを作成する
+            </Button>
+          </Link>
         </div>
       ) : (
         <div className="border-border rounded-lg border">
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-muted">
               <TableRow>
-                <TableHead>氏名</TableHead>
-                <TableHead>希望参画日</TableHead>
+                <TableHead>作成日時</TableHead>
+                <TableHead>案件参画希望日</TableHead>
                 <TableHead>経験年数</TableHead>
-                <TableHead>性別</TableHead>
-                <TableHead>登録内容</TableHead>
-                <TableHead className="text-right">出力</TableHead>
+                <TableHead className="text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {skillSheets.map((skillSheet) => (
                 <TableRow key={skillSheet.id}>
-                  <TableCell className="font-medium">
-                    {skillSheet.fullName}
+                  <TableCell>
+                    {new Date(skillSheet.createdAt).toLocaleString('ja-JP')}
                   </TableCell>
                   <TableCell>
                     {formatReiwaDate(skillSheet.desiredStartDate)}
@@ -74,11 +88,19 @@ export default async function SkillSheetsPage() {
                     {formatExperienceMonths(skillSheet.experienceMonths)}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{skillSheet.gender}</Badge>
-                  </TableCell>
-                  <TableCell>案件 {skillSheet._count.projects}件</TableCell>
-                  <TableCell>
                     <div className="flex justify-end gap-2">
+                      <Link
+                        href={`/skill-sheets/new?copyFrom=${skillSheet.id}`}
+                      >
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          aria-label="コピーして編集"
+                        >
+                          <Copy className="size-4" aria-hidden="true" />
+                          コピーして編集
+                        </Button>
+                      </Link>
                       <Link
                         href={`/skill-sheets/${skillSheet.id}/print`}
                         target="_blank"
@@ -95,15 +117,6 @@ export default async function SkillSheetsPage() {
                             aria-hidden="true"
                           />
                           Excel
-                        </Button>
-                      </Link>
-                      <Link href={`/skill-sheets/${skillSheet.id}/print`}>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label="表示"
-                        >
-                          <Download className="size-4" aria-hidden="true" />
                         </Button>
                       </Link>
                     </div>

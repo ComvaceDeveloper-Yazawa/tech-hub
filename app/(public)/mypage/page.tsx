@@ -4,6 +4,9 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookmarkIcon, PencilIcon, AwardIcon } from 'lucide-react';
+import { getProfile } from '@/presentation/actions/avatar';
+import { AvatarCreator } from '@/components/features/AvatarCreator';
+import type { AvatarConfig } from '@/types/avatar';
 
 export default async function MyPagePage() {
   const supabase = await createClient();
@@ -15,9 +18,23 @@ export default async function MyPagePage() {
     redirect('/login');
   }
 
+  const profile = await getProfile();
+  const defaultConfig: AvatarConfig = {
+    style: 'avataaars',
+    seed: user.id,
+  };
+  const avatarConfig = profile?.avatarConfig ?? defaultConfig;
+  const displayName = profile?.displayName ?? '';
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <h1 className="mb-8 text-3xl font-bold">マイページ</h1>
+
+      {/* プロフィールセクション */}
+      <section className="mb-10">
+        <h2 className="mb-4 text-xl font-semibold">プロフィール</h2>
+        <AvatarCreator initialConfig={avatarConfig} initialDisplayName={displayName} />
+      </section>
 
       <div className="grid gap-6 md:grid-cols-3">
         <Link href="/admin/articles">
