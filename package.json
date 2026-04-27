@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "lint:oxlint": "oxlint .",
+    "typecheck": "tsc --noEmit",
+    "prebuild:check": "tsc --noEmit && next lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest --run",

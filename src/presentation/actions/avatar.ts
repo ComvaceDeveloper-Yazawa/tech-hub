@@ -45,14 +45,14 @@ export async function saveProfile(input: {
     where: { userId: userIdStr },
     update: {
       displayName: input.displayName,
-      avatarConfig: input.avatarConfig as Record<string, unknown>,
+      avatarConfig: JSON.parse(JSON.stringify(input.avatarConfig)),
     },
     create: {
       id: ulid(),
       userId: userIdStr,
       tenantId,
       displayName: input.displayName,
-      avatarConfig: input.avatarConfig as Record<string, unknown>,
+      avatarConfig: JSON.parse(JSON.stringify(input.avatarConfig)),
     },
   });
 }

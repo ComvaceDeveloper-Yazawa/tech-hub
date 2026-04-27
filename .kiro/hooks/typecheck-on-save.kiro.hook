@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "型チェック（保存時）",
+  "description": "TypeScript ファイルを保存したとき、tsc --noEmit を実行して型エラーがないか確認します。Vercel ビルド失敗の再発防止用。",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "*.ts",
+      "*.tsx"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npx tsc --noEmit 2>&1 | head -30",
+    "timeout": 30
+  }
+}
