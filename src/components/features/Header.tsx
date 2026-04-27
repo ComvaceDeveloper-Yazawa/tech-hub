@@ -35,6 +35,12 @@ export async function Header() {
           </Link>
           {isAuthenticated ? (
             <>
+              <Link
+                href="/curriculum"
+                className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded text-sm font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-none"
+              >
+                カリキュラム
+              </Link>
               <Link href="/mypage" title="マイページ">
                 <Button
                   variant="ghost"
