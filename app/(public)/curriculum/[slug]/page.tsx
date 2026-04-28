@@ -35,14 +35,16 @@ export default async function StageMapPage({ params }: StageMapPageProps) {
   const avatarConfig = profile?.avatarConfig ?? null;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className="mx-auto max-w-lg px-4 py-6">
       <Link
         href="/curriculum"
-        className="text-muted-foreground mb-4 inline-block text-sm hover:underline"
+        className="mb-3 inline-flex items-center gap-1 rounded-full bg-white/80 px-3 py-1 text-sm text-green-800 shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
       >
-        ← カリキュラム一覧に戻る
+        ← もどる
       </Link>
-      <h1 className="mb-6 text-2xl font-bold">{curriculum.title}</h1>
+      <h1 className="mb-4 text-center text-xl font-bold text-white">
+        {curriculum.title}
+      </h1>
       <StageMapClient stages={stages} avatarConfig={avatarConfig} />
     </div>
   );
