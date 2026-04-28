@@ -22,6 +22,10 @@ export function StageMapClient({ stages, avatarConfig }: StageMapClientProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleStageClick = (stage: StageWithStatus) => {
+    if (stage.stage_number === 1) {
+      router.push('/learn/background-image');
+      return;
+    }
     setSelectedStage(stage);
     setDialogOpen(true);
   };

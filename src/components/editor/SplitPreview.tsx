@@ -37,8 +37,8 @@ export function SplitPreview({
 
   return (
     <div className="flex" style={{ height: `${height}px` }}>
-      {/* 左: エディタ */}
-      <div className="flex-1 overflow-hidden">
+      {/* 左: エディタ (モバイルでは全幅、PCでは半分) */}
+      <div className="w-full overflow-hidden md:flex-1">
         <CodeMirror
           ref={editorRef}
           value={value}
@@ -72,13 +72,13 @@ export function SplitPreview({
         />
       </div>
 
-      {/* Divider */}
-      <div className="w-px bg-[#3e4451]" />
+      {/* Divider (PC のみ) */}
+      <div className="hidden w-px bg-[#3e4451] md:block" />
 
-      {/* 右: プレビュー */}
+      {/* 右: プレビュー (PC のみ) */}
       <div
         ref={previewRef}
-        className="flex-1 overflow-auto bg-[#282c34] p-6"
+        className="hidden flex-1 overflow-auto bg-[#282c34] p-6 md:block"
         style={{ height: `${height}px` }}
       >
         {value.trim() ? (

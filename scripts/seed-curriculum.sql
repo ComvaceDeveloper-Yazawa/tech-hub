@@ -23,13 +23,19 @@ WITH curriculum AS (
 )
 INSERT INTO public.stages (curriculum_id, stage_number, title, description)
 VALUES
-  ((SELECT id FROM curriculum), 1, 'HTML基礎', 'HTMLの基本構造とよく使うタグを学びます'),
-  ((SELECT id FROM curriculum), 2, 'CSS基礎', 'スタイリングの基礎とレイアウト手法を学びます'),
-  ((SELECT id FROM curriculum), 3, 'JavaScript基礎', 'プログラミングの基本とDOM操作を学びます')
+  ((SELECT id FROM curriculum), 1, 'HTML基礎', 'HTMLの基本構造とよく使うタグを学びます')
 ON CONFLICT (curriculum_id, stage_number) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
   updated_at = now();
+
+-- ステージ2・3を削除
+WITH curriculum AS (
+  SELECT id FROM public.curriculums WHERE slug = 'frontend'
+)
+DELETE FROM public.stages
+WHERE curriculum_id = (SELECT id FROM curriculum)
+  AND stage_number IN (2, 3);
 
 -- 参考記事
 INSERT INTO public.reference_articles (slug, title, icon, content, sort_order)
