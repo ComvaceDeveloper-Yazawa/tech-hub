@@ -32,7 +32,7 @@ export default async function ArticleEditPage({
           tagNames: article.tagNames,
         }}
         initialTagSuggestions={tags}
-        onSubmit={(data) => handleArticleUpdate(id, data)}
+        onSubmit={handleArticleUpdate.bind(null, id)}
       />
     </div>
   );
