@@ -14,7 +14,7 @@ export function evaluateRules(
   for (const rule of rules) {
     const actual =
       style.getPropertyValue(camelToDash(rule.property)) ||
-      (style as Record<string, string>)[rule.property] ||
+      (style as unknown as Record<string, string>)[rule.property] ||
       '';
 
     let passed = false;
