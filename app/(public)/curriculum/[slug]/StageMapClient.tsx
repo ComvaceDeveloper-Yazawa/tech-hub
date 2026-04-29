@@ -1,11 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { StageMap3D } from '@/components/features/curriculum/StageMap3D';
-import { StageContentDialog } from '@/components/features/curriculum/StageContentDialog';
-import { completeStage } from '@/presentation/actions/curriculum/completeStage';
+import { DuolingoStageMap } from '@/components/features/curriculum/DuolingoStageMap';
 import type { StageWithStatus } from '@/lib/curriculum/types';
 import type { AvatarConfig } from '@/types/avatar';
 
@@ -14,40 +10,78 @@ interface StageMapClientProps {
   avatarConfig: AvatarConfig | null;
 }
 
+// ダミー10ステージ（DBのステージ1 + ダミー9ステージ）
+const STAGE_ICONS = [
+  '⭐',
+  '🎨',
+  '📐',
+  '🖼️',
+  '📦',
+  '🧩',
+  '🎯',
+  '🚀',
+  '💎',
+  '🏆',
+];
+const STAGE_TITLES = [
+  '背景画像',
+  'テキスト装飾',
+  'ボックスモデル',
+  'Flexbox基礎',
+  'Grid基礎',
+  'レスポンシブ',
+  'アニメーション',
+  'フォーム設計',
+  'レイアウト実践',
+  '総合テスト',
+];
+
+function buildStages(dbStages: StageWithStatus[]) {
+  const totalStages = 10;
+  const completedCount = dbStages.filter(
+    (s) => s.status === 'completed'
+  ).length;
+
+  return Array.from({ length: totalStages }, (_, i) => {
+    const dbStage = dbStages.find((s) => s.stage_number === i + 1);
+    let status: 'completed' | 'current' | 'locked';
+
+    if (dbStage?.status === 'completed') {
+      status = 'completed';
+    } else if (i === completedCount) {
+      status = 'current';
+    } else {
+      status = 'locked';
+    }
+
+    return {
+      id: dbStage?.id ?? `dummy-${i + 1}`,
+      number: i + 1,
+      title: STAGE_TITLES[i] ?? `ステージ ${i + 1}`,
+      status,
+      icon: STAGE_ICONS[i] ?? '⭐',
+    };
+  });
+}
+
 export function StageMapClient({ stages }: StageMapClientProps) {
   const router = useRouter();
-  const [selectedStage, setSelectedStage] = useState<StageWithStatus | null>(
-    null
-  );
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const allStages = buildStages(stages);
 
-  const handleStageClick = (stage: StageWithStatus) => {
-    if (stage.stage_number === 1) {
+  const handleStageClick = (stage: {
+    id: string;
+    number: number;
+    status: string;
+  }) => {
+    if (stage.number === 1) {
       router.push('/learn/background-image');
       return;
     }
-    setSelectedStage(stage);
-    setDialogOpen(true);
-  };
-
-  const handleComplete = async (stageId: string) => {
-    const result = await completeStage(stageId);
-    if (!result.success) {
-      toast.error(result.error ?? 'ステージの完了に失敗しました');
-      throw new Error(result.error);
-    }
-    router.refresh();
+    // 将来的に各ステージの学習ページへ遷移
+    alert(`ステージ${stage.number}は準備中です`);
   };
 
   return (
-    <>
-      <StageMap3D stages={stages} onStageClick={handleStageClick} />
-      <StageContentDialog
-        stage={selectedStage}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onComplete={handleComplete}
-      />
-    </>
+    <DuolingoStageMap stages={allStages} onStageClick={handleStageClick} />
   );
 }

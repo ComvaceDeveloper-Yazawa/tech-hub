@@ -35,17 +35,52 @@ export default async function StageMapPage({ params }: StageMapPageProps) {
   const avatarConfig = profile?.avatarConfig ?? null;
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
-      <Link
-        href="/curriculum"
-        className="mb-3 inline-flex items-center gap-1 rounded-full bg-white/80 px-3 py-1 text-sm text-green-800 shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
-      >
-        ← もどる
-      </Link>
-      <h1 className="mb-4 text-center text-xl font-bold text-white">
-        {curriculum.title}
-      </h1>
-      <StageMapClient stages={stages} avatarConfig={avatarConfig} />
+    <div className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-md px-4 py-6">
+        {/* ヘッダー */}
+        <div className="mb-6 flex items-center gap-3">
+          <Link
+            href="/curriculum"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm transition-colors hover:bg-slate-100"
+            aria-label="戻る"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </Link>
+          <div className="flex-1">
+            <h1 className="text-lg font-bold text-slate-800">
+              {curriculum.title}
+            </h1>
+            <p className="text-xs text-slate-500">
+              {stages.filter((s) => s.status === 'completed').length} / 10 完了
+            </p>
+          </div>
+        </div>
+
+        {/* プログレスバー */}
+        <div className="mb-8 overflow-hidden rounded-full bg-slate-200">
+          <div
+            className="h-2.5 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
+            style={{
+              width: `${(stages.filter((s) => s.status === 'completed').length / 10) * 100}%`,
+            }}
+          />
+        </div>
+
+        {/* ステージマップ */}
+        <StageMapClient stages={stages} avatarConfig={avatarConfig} />
+      </div>
     </div>
   );
 }
