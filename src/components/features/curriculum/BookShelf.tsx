@@ -350,7 +350,10 @@ function StartButton({
 }) {
   return (
     <button
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
       className="w-full cursor-pointer rounded-lg bg-gradient-to-r from-amber-700 to-amber-600 px-4 py-3 text-sm font-bold text-white shadow-lg transition-all hover:from-amber-600 hover:to-amber-500 active:scale-[0.98]"
     >
       {book.completedStages > 0 ? '冒険を続ける' : '冒険を始める'}
