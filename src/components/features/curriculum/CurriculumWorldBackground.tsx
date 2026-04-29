@@ -205,27 +205,9 @@ export function CurriculumWorldBackground() {
           fade
           speed={0.3}
         />
-        <Cloud
-          position={[-15, 6, -25]}
-          speed={0.08}
-          opacity={0.2}
-          width={18}
-          depth={3}
-        />
-        <Cloud
-          position={[12, 8, -30]}
-          speed={0.06}
-          opacity={0.15}
-          width={15}
-          depth={2}
-        />
-        <Cloud
-          position={[0, 4, -20]}
-          speed={0.1}
-          opacity={0.12}
-          width={20}
-          depth={3}
-        />
+        <Cloud position={[-15, 6, -25]} speed={0.08} opacity={0.2} />
+        <Cloud position={[12, 8, -30]} speed={0.06} opacity={0.15} />
+        <Cloud position={[0, 4, -20]} speed={0.1} opacity={0.12} />
 
         <Suspense fallback={<LoadingFallback />}>
           <CastleModel />
