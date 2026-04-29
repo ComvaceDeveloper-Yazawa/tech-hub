@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { StageMap } from '@/components/features/curriculum/StageMap';
+import { StageMap3D } from '@/components/features/curriculum/StageMap3D';
 import { StageContentDialog } from '@/components/features/curriculum/StageContentDialog';
 import { completeStage } from '@/presentation/actions/curriculum/completeStage';
 import type { StageWithStatus } from '@/lib/curriculum/types';
@@ -14,7 +14,7 @@ interface StageMapClientProps {
   avatarConfig: AvatarConfig | null;
 }
 
-export function StageMapClient({ stages, avatarConfig }: StageMapClientProps) {
+export function StageMapClient({ stages }: StageMapClientProps) {
   const router = useRouter();
   const [selectedStage, setSelectedStage] = useState<StageWithStatus | null>(
     null
@@ -41,11 +41,7 @@ export function StageMapClient({ stages, avatarConfig }: StageMapClientProps) {
 
   return (
     <>
-      <StageMap
-        stages={stages}
-        avatarConfig={avatarConfig}
-        onStageClick={handleStageClick}
-      />
+      <StageMap3D stages={stages} onStageClick={handleStageClick} />
       <StageContentDialog
         stage={selectedStage}
         open={dialogOpen}
