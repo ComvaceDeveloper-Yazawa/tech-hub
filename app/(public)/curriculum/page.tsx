@@ -1,8 +1,7 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getCurriculums } from '@/presentation/actions/curriculum/getCurriculums';
-import { CurriculumWorldBackground } from '@/components/features/curriculum/CurriculumWorldBackground';
+import { BookShelf } from '@/components/features/curriculum/BookShelf';
 
 export default async function CurriculumListPage() {
   const supabase = await createClient();
@@ -17,109 +16,61 @@ export default async function CurriculumListPage() {
   const curriculums = await getCurriculums();
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#1a0f05]">
-      {/* 3D背景 */}
-      <CurriculumWorldBackground />
-
-      {/* コンテンツ */}
-      <div className="relative z-10 flex min-h-screen flex-col">
-        {/* 上部タイトルエリア */}
-        <div className="flex flex-1 flex-col items-center justify-center px-4 pb-8 pt-16">
-          {/* サブタイトル */}
-          <p className="mb-3 font-mono text-xs uppercase tracking-[0.3em] text-amber-300/70">
-            Tech Hub
-          </p>
-
-          {/* メインタイトル */}
-          <h1
-            className="mb-2 text-center text-5xl font-black tracking-tight text-white drop-shadow-[0_0_30px_rgba(251,191,36,0.4)] md:text-7xl"
-            style={{
-              textShadow:
-                '0 0 60px rgba(251,191,36,0.3), 0 2px 4px rgba(0,0,0,0.8)',
-              fontFamily: 'serif',
-            }}
-          >
-            カリキュラム
-          </h1>
-
-          {/* 装飾ライン */}
-          <div className="mb-8 flex items-center gap-3">
-            <div className="h-px w-16 bg-gradient-to-r from-transparent to-amber-400/60" />
-            <span className="text-sm text-amber-400/60">✦</span>
-            <div className="h-px w-16 bg-gradient-to-l from-transparent to-amber-400/60" />
-          </div>
-
-          {/* カリキュラムカード */}
-          {curriculums.length === 0 ? (
-            <p className="text-white/50">カリキュラムがありません</p>
-          ) : (
-            <div className="flex flex-wrap justify-center gap-5">
-              {curriculums.map((curriculum, i) => (
-                <Link
-                  key={curriculum.id}
-                  href={`/curriculum/${curriculum.slug}`}
-                  className="group relative"
-                >
-                  {/* カード */}
-                  <div
-                    className="relative w-72 overflow-hidden rounded-xl border border-white/10 bg-black/40 p-6 backdrop-blur-md transition-all duration-300 group-hover:border-amber-400/40 group-hover:bg-black/60 group-hover:shadow-[0_0_30px_rgba(251,191,36,0.15)]"
-                    style={{ animationDelay: `${i * 0.1}s` }}
-                  >
-                    {/* 番号バッジ */}
-                    <div className="mb-4 flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full border border-amber-400/40 bg-amber-400/10 text-sm font-bold text-amber-300">
-                        {i + 1}
-                      </div>
-                      <div className="h-px flex-1 bg-gradient-to-r from-amber-400/30 to-transparent" />
-                    </div>
-
-                    {/* タイトル */}
-                    <h2 className="mb-2 text-lg font-bold text-white transition-colors group-hover:text-amber-200">
-                      {curriculum.title}
-                    </h2>
-
-                    {/* 説明 */}
-                    <p className="mb-4 text-sm leading-relaxed text-white/50">
-                      {curriculum.description}
-                    </p>
-
-                    {/* 進捗 */}
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-xs text-white/40">
-                        <span>進捗</span>
-                        <span>
-                          {curriculum.completed_stages} /{' '}
-                          {curriculum.total_stages}
-                        </span>
-                      </div>
-                      <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-300 transition-all duration-500"
-                          style={{
-                            width:
-                              curriculum.total_stages > 0
-                                ? `${(curriculum.completed_stages / curriculum.total_stages) * 100}%`
-                                : '0%',
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* ホバー時の矢印 */}
-                    <div className="mt-4 flex items-center justify-end gap-1 text-xs text-amber-400/0 transition-all duration-300 group-hover:text-amber-400/80">
-                      <span>冒険を始める</span>
-                      <span>→</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* 下部の霧グラデーション */}
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#1a0f05] to-transparent" />
+    <div
+      className="relative flex min-h-screen flex-col items-center justify-center px-4"
+      style={{
+        background:
+          'radial-gradient(ellipse at 50% 30%, #2a1f14 0%, #1a1520 50%, #0f0d12 100%)',
+      }}
+    >
+      {/* 背景の雰囲気 */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_20%,rgba(180,120,50,0.12)_0%,transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_80%,rgba(120,80,30,0.08)_0%,transparent_50%)]" />
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0z' fill='none'/%3E%3Cpath d='M0 20h40M20 0v40' stroke='%23fff' stroke-width='.5'/%3E%3C/svg%3E\")",
+            backgroundSize: '40px 40px',
+          }}
+        />
       </div>
+
+      {/* タイトル */}
+      <div className="relative mb-12 text-center">
+        <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.4em] text-amber-500/50">
+          Tech Hub
+        </p>
+        <h1
+          className="text-4xl font-black text-amber-100/90 md:text-5xl"
+          style={{
+            fontFamily: 'serif',
+            textShadow: '0 0 40px rgba(180,130,60,0.3)',
+          }}
+        >
+          冒険の書
+        </h1>
+        <div className="mt-3 flex items-center justify-center gap-3">
+          <div className="h-px w-12 bg-gradient-to-r from-transparent to-amber-600/40" />
+          <span className="text-xs text-amber-600/40">✦</span>
+          <div className="h-px w-12 bg-gradient-to-l from-transparent to-amber-600/40" />
+        </div>
+      </div>
+
+      {/* 本棚 */}
+      <div className="relative">
+        {curriculums.length === 0 ? (
+          <p className="text-amber-300/40">カリキュラムがありません</p>
+        ) : (
+          <BookShelf curriculums={curriculums} />
+        )}
+      </div>
+
+      {/* ヒント */}
+      <p className="mt-8 text-xs text-amber-300/30">
+        本をクリックして冒険を始めよう
+      </p>
     </div>
   );
 }
