@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { cn } from '@/lib/cn';
 
 type CurriculumBook = {
@@ -94,7 +94,6 @@ function OpenBookModal({
   phase: AnimPhase;
   onClose: () => void;
 }) {
-  const router = useRouter();
   const colors = BOOK_COLORS[index % BOOK_COLORS.length]!;
   const progress =
     book.totalStages > 0
@@ -109,110 +108,113 @@ function OpenBookModal({
   if (!isVisible) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-      onClick={(e) => {
-        // デスクトップのみ背景タップで閉じる
-        if (showOpen && window.innerWidth >= 768) {
-          onClose();
-        }
-      }}
-    >
+    <>
+      {/* 背景オーバーレイ */}
+      <div
+        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+        aria-hidden="true"
+      />
+
       {/* デスクトップ: 見開き本 */}
-      <div
-        className="relative hidden md:block"
-        style={{ perspective: '1200px' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="relative" style={{ transformStyle: 'preserve-3d' }}>
-          {/* 右ページ（ステータス） */}
-          <div
-            className={cn(
-              'absolute left-0 top-0 flex h-[380px] w-[300px] flex-col justify-between rounded-r-lg bg-[#f5e6c8] p-6 shadow-xl transition-all duration-700',
-              showOpening || showOpen
-                ? 'translate-x-0 opacity-100'
-                : 'translate-x-[-20px] opacity-0'
-            )}
-          >
-            <PageStatus progress={progress} book={book} showOpen={showOpen} />
-            <StartButton
-              book={book}
-              onClick={() => router.push(`/curriculum/${book.slug}`)}
-            />
-          </div>
-
-          {/* 表紙 */}
-          <div
-            className={cn(
-              'relative z-10 flex h-[380px] w-[300px] flex-col justify-between rounded-lg p-6 shadow-2xl transition-all duration-700',
-              `bg-gradient-to-br ${colors.cover}`
-            )}
-            style={{
-              transformOrigin: 'right center',
-              transform:
-                showOpening || showOpen ? 'rotateY(-160deg)' : 'rotateY(0deg)',
-              backfaceVisibility: 'hidden',
-            }}
-          >
-            <CoverContent book={book} index={index} />
-          </div>
-
-          {/* 左ページ（タイトル） */}
-          {(showOpening || showOpen) && (
-            <div
-              className="absolute left-0 top-0 z-20 flex h-[380px] w-[300px] flex-col justify-between rounded-l-lg bg-[#f5e6c8] p-6 shadow-xl"
-              style={{ transform: 'translateX(-100%)' }}
-            >
-              <PageTitle book={book} />
-            </div>
-          )}
-        </div>
-
-        {showOpen && <CloseButton onClick={onClose} />}
-      </div>
-
-      {/* モバイル: 縦スクロール1ページ */}
-      <div
-        className="pointer-events-auto relative block w-full max-w-sm md:hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="pointer-events-none fixed inset-0 z-[51] hidden items-center justify-center p-4 md:flex">
         <div
-          className="overflow-hidden rounded-xl bg-[#f5e6c8] shadow-2xl"
-          style={{ animation: 'fadeSlideUp 0.4s ease-out' }}
+          className="pointer-events-auto relative"
+          style={{ perspective: '1200px' }}
         >
-          {/* 表紙ヘッダー */}
-          <div className={cn('p-5', `bg-gradient-to-br ${colors.cover}`)}>
-            <div className="absolute inset-x-0 top-0 h-full bg-gradient-to-br from-white/10 via-transparent to-black/20" />
-            <p className="relative font-mono text-[10px] uppercase tracking-widest text-amber-300/50">
-              Adventure Log — Vol. {index + 1}
-            </p>
-            <h2
-              className="relative mt-2 text-xl font-black text-amber-100"
+          <div className="relative" style={{ transformStyle: 'preserve-3d' }}>
+            {/* 右ページ（ステータス） */}
+            <div
+              className={cn(
+                'absolute left-0 top-0 flex h-[380px] w-[300px] flex-col justify-between rounded-r-lg bg-[#f5e6c8] p-6 shadow-xl transition-all duration-700',
+                showOpening || showOpen
+                  ? 'translate-x-0 opacity-100'
+                  : 'translate-x-[-20px] opacity-0'
+              )}
+            >
+              <PageStatus progress={progress} book={book} showOpen={showOpen} />
+              <StartLink book={book} />
+            </div>
+
+            {/* 表紙 */}
+            <div
+              className={cn(
+                'relative z-10 flex h-[380px] w-[300px] flex-col justify-between rounded-lg p-6 shadow-2xl transition-all duration-700',
+                `bg-gradient-to-br ${colors.cover}`
+              )}
               style={{
-                fontFamily: 'serif',
-                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                transformOrigin: 'right center',
+                transform:
+                  showOpening || showOpen
+                    ? 'rotateY(-160deg)'
+                    : 'rotateY(0deg)',
+                backfaceVisibility: 'hidden',
               }}
             >
-              {book.title}
-            </h2>
-            <p className="relative mt-1 text-xs text-amber-200/60">
-              {book.description}
-            </p>
+              <CoverContent book={book} index={index} />
+            </div>
+
+            {/* 左ページ（タイトル） */}
+            {(showOpening || showOpen) && (
+              <div
+                className="absolute left-0 top-0 z-20 flex h-[380px] w-[300px] flex-col justify-between rounded-l-lg bg-[#f5e6c8] p-6 shadow-xl"
+                style={{ transform: 'translateX(-100%)' }}
+              >
+                <PageTitle book={book} />
+              </div>
+            )}
           </div>
 
-          {/* ステータス */}
-          <div className="p-5">
-            <PageStatus progress={progress} book={book} showOpen={showOpen} />
-            <div className="mt-4">
-              <StartButton
-                book={book}
-                onClick={() => router.push(`/curriculum/${book.slug}`)}
-              />
+          {showOpen && <CloseButton onClick={onClose} />}
+        </div>
+      </div>
+
+      {/* モバイル: 完全に独立したモーダル */}
+      <div className="fixed inset-0 z-[51] flex items-center justify-center p-4 md:hidden">
+        <div className="relative w-full max-w-sm">
+          <div
+            className="overflow-hidden rounded-xl bg-[#f5e6c8] shadow-2xl"
+            style={{ animation: 'fadeSlideUp 0.4s ease-out' }}
+          >
+            {/* 表紙ヘッダー */}
+            <div
+              className={cn(
+                'relative p-5',
+                `bg-gradient-to-br ${colors.cover}`
+              )}
+            >
+              <p className="font-mono text-[10px] uppercase tracking-widest text-amber-300/50">
+                Adventure Log — Vol. {index + 1}
+              </p>
+              <h2
+                className="mt-2 text-xl font-black text-amber-100"
+                style={{
+                  fontFamily: 'serif',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                }}
+              >
+                {book.title}
+              </h2>
+              <p className="mt-1 text-xs text-amber-200/60">
+                {book.description}
+              </p>
+            </div>
+
+            {/* ステータス */}
+            <div className="p-5">
+              <PageStatus progress={progress} book={book} showOpen={showOpen} />
+              <div className="mt-4">
+                <a
+                  href={`/curriculum/${book.slug}`}
+                  className="block w-full cursor-pointer rounded-lg bg-gradient-to-r from-amber-700 to-amber-600 px-4 py-3 text-center text-sm font-bold text-white shadow-lg transition-all hover:from-amber-600 hover:to-amber-500 active:scale-[0.98]"
+                >
+                  {book.completedStages > 0 ? '冒険を続ける' : '冒険を始める'}
+                </a>
+              </div>
             </div>
           </div>
-        </div>
 
-        {showOpen && <CloseButton onClick={onClose} mobile />}
+          {showOpen && <CloseButton onClick={onClose} mobile />}
+        </div>
       </div>
 
       <style>{`
@@ -221,7 +223,7 @@ function OpenBookModal({
           to { transform: translateY(0); opacity: 1; }
         }
       `}</style>
-    </div>
+    </>
   );
 }
 
@@ -346,23 +348,14 @@ function PageStatus({
   );
 }
 
-function StartButton({
-  book,
-  onClick,
-}: {
-  book: CurriculumBook;
-  onClick: () => void;
-}) {
+function StartLink({ book }: { book: CurriculumBook }) {
   return (
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
-      className="w-full cursor-pointer rounded-lg bg-gradient-to-r from-amber-700 to-amber-600 px-4 py-3 text-sm font-bold text-white shadow-lg transition-all hover:from-amber-600 hover:to-amber-500 active:scale-[0.98]"
+    <Link
+      href={`/curriculum/${book.slug}`}
+      className="block w-full cursor-pointer rounded-lg bg-gradient-to-r from-amber-700 to-amber-600 px-4 py-3 text-center text-sm font-bold text-white shadow-lg transition-all hover:from-amber-600 hover:to-amber-500 active:scale-[0.98]"
     >
       {book.completedStages > 0 ? '冒険を続ける' : '冒険を始める'}
-    </button>
+    </Link>
   );
 }
 
