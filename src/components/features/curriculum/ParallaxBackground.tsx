@@ -3,7 +3,7 @@
 export function ParallaxBackground() {
   return (
     <div className="pointer-events-none fixed inset-0">
-      {/* PC用背景（md以上） */}
+      {/* PC用背景 */}
       <div
         className="absolute inset-0 hidden md:block"
         style={{
@@ -11,10 +11,9 @@ export function ParallaxBackground() {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed',
         }}
       />
-      {/* スマホ用背景（md未満） */}
+      {/* スマホ用背景 */}
       <div
         className="absolute inset-0 block md:hidden"
         style={{
@@ -22,7 +21,6 @@ export function ParallaxBackground() {
           backgroundSize: 'cover',
           backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed',
         }}
       />
       <div className="bg-black/15 absolute inset-0" />
