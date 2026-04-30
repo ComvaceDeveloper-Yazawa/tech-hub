@@ -111,7 +111,12 @@ function OpenBookModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-      onClick={showOpen ? onClose : undefined}
+      onClick={(e) => {
+        // デスクトップのみ背景タップで閉じる
+        if (showOpen && window.innerWidth >= 768) {
+          onClose();
+        }
+      }}
     >
       {/* デスクトップ: 見開き本 */}
       <div
@@ -168,7 +173,7 @@ function OpenBookModal({
 
       {/* モバイル: 縦スクロール1ページ */}
       <div
-        className="relative block w-full max-w-sm md:hidden"
+        className="pointer-events-auto relative block w-full max-w-sm md:hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div
