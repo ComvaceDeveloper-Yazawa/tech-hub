@@ -1,9 +1,8 @@
 'use client';
 
 import type { LessonStep } from '@/types/step';
-import { LessonIntro1 } from './lessons/LessonIntro1';
-import { LessonIntro2 } from './lessons/LessonIntro2';
-import { LessonIntro3 } from './lessons/LessonIntro3';
+import { HeroLesson1 } from './lessons/HeroLesson1';
+import { HeroLesson2 } from './lessons/HeroLesson2';
 
 type LessonViewProps = {
   step: LessonStep;
@@ -22,9 +21,8 @@ const lessonComponents: Record<
     isLastStep: boolean;
   }>
 > = {
-  'intro-1': LessonIntro1,
-  'intro-2': LessonIntro2,
-  'intro-3': LessonIntro3,
+  'hero-lesson-1': HeroLesson1,
+  'hero-lesson-2': HeroLesson2,
 };
 
 export function LessonView({

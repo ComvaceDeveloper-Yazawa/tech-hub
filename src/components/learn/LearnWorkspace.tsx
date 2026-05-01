@@ -39,13 +39,16 @@ export function LearnWorkspace({ chapter }: LearnWorkspaceProps) {
     const iframe = iframeRef.current;
     if (!iframe) return { passed: false, failedHints: [] };
     try {
-      const heroEl = iframe.contentDocument?.querySelector('.hero');
-      if (!heroEl)
+      const selector = currentStep.targetSelector ?? '.hero';
+      const targetEl = iframe.contentDocument?.querySelector(selector);
+      if (!targetEl)
         return {
           passed: false,
-          failedHints: ['`.hero` 要素が見つかりません。HTMLを確認しましょう。'],
+          failedHints: [
+            `\`${selector}\` 要素が見つかりません。HTMLを確認しましょう。`,
+          ],
         };
-      const style = iframe.contentWindow?.getComputedStyle(heroEl);
+      const style = iframe.contentWindow?.getComputedStyle(targetEl);
       if (!style) return { passed: false, failedHints: [] };
       const result = evaluateRules(style, currentStep.checkRules);
       setIsCleared(result.passed);
@@ -132,7 +135,7 @@ export function LearnWorkspace({ chapter }: LearnWorkspaceProps) {
 
           {/* 右: エディタ + プレビュー */}
           <div className="flex flex-1 flex-col gap-3 overflow-hidden">
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-[2] overflow-hidden">
               <CodeEditor
                 html={html}
                 css={css}
@@ -141,7 +144,7 @@ export function LearnWorkspace({ chapter }: LearnWorkspaceProps) {
                 onReset={handleReset}
               />
             </div>
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-[3] overflow-hidden">
               <Preview
                 html={html}
                 css={css}

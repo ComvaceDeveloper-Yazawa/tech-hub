@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import React from 'react';
 import type { PracticeStep } from '@/types/step';
 import type { GradeResult } from '@/lib/checker';
 import { cn } from '@/lib/cn';
@@ -121,7 +122,7 @@ function GradeModal({
                 </div>
                 <p className="font-bold text-slate-800">もう少しです</p>
               </div>
-              <p className="mb-3 text-xs font-medium tracking-wide text-slate-400 uppercase">
+              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400">
                 確認してほしいポイント
               </p>
               <ul className="space-y-2">
@@ -166,6 +167,83 @@ function renderInlineCode(text: string): React.ReactNode {
       part
     )
   );
+}
+
+function CodeBlock({ code }: { code: string }) {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+
+  return (
+    <div className="relative my-2 rounded-lg bg-slate-800">
+      <button
+        onClick={handleCopy}
+        className="absolute right-2 top-2 rounded px-2 py-0.5 text-[10px] font-medium text-slate-400 transition-colors hover:bg-slate-700 hover:text-slate-200"
+        aria-label="コードをコピー"
+      >
+        {copied ? '✓ コピー済み' : 'コピー'}
+      </button>
+      <pre className="overflow-x-auto px-4 py-3 pr-16 text-xs leading-relaxed text-emerald-300">
+        <code>{code}</code>
+      </pre>
+    </div>
+  );
+}
+
+function renderDescription(description: string): React.ReactNode {
+  const lines = description.split('\n');
+  const result: React.ReactNode[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i] ?? '';
+
+    // コードブロック開始
+    if (line.startsWith('```')) {
+      const codeLines: string[] = [];
+      i++;
+      while (i < lines.length && !(lines[i] ?? '').startsWith('```')) {
+        codeLines.push(lines[i] ?? '');
+        i++;
+      }
+      result.push(<CodeBlock key={i} code={codeLines.join('\n')} />);
+      i++; // 閉じる ``` をスキップ
+      continue;
+    }
+
+    // リスト
+    if (line.startsWith('- ')) {
+      result.push(
+        <li key={i} className="text-sm text-slate-600">
+          {renderInlineCode(line.slice(2))}
+        </li>
+      );
+      i++;
+      continue;
+    }
+
+    // 空行
+    if (line.trim() === '') {
+      result.push(<br key={i} />);
+      i++;
+      continue;
+    }
+
+    // 通常テキスト
+    result.push(
+      <p key={i} className="text-sm leading-relaxed text-slate-600">
+        {renderInlineCode(line)}
+      </p>
+    );
+    i++;
+  }
+
+  return result;
 }
 
 function HintModal({ hints, onClose }: HintModalProps) {
@@ -316,29 +394,14 @@ export function StepGuide({
       <h2 className="mb-4 text-lg font-bold text-slate-800">{step.title}</h2>
 
       <div className="prose prose-sm prose-slate mb-6 flex-1">
-        {step.description.split('\n').map((line, i) => {
-          if (line.startsWith('```')) return null;
-          if (line.startsWith('- ')) {
-            return (
-              <li key={i} className="text-sm text-slate-600">
-                {renderInlineCode(line.slice(2))}
-              </li>
-            );
-          }
-          if (line.trim() === '') return <br key={i} />;
-          return (
-            <p key={i} className="text-sm leading-relaxed text-slate-600">
-              {renderInlineCode(line)}
-            </p>
-          );
-        })}
+        {renderDescription(step.description)}
       </div>
 
       {step.hints.length > 0 && (
         <div className="mb-4">
           <button
             onClick={() => setHintModalOpen(true)}
-            className="flex w-full items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-left text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100 focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:outline-none"
+            className="flex w-full items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-left text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2"
           >
             <span>ヒントを見る ({step.hints.length}件)</span>
             <span className="text-xs">→</span>

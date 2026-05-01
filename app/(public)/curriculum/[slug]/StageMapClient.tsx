@@ -24,7 +24,7 @@ const STAGE_ICONS = [
   '🏆',
 ];
 const STAGE_TITLES = [
-  '背景画像',
+  'ヒーローセクションを作ろう',
   'テキスト装飾',
   'ボックスモデル',
   'Flexbox基礎',
@@ -74,7 +74,7 @@ export function StageMapClient({ stages }: StageMapClientProps) {
     status: string;
   }) => {
     if (stage.number === 1) {
-      router.push('/learn/background-image');
+      router.push('/learn/hero-section');
       return;
     }
     // 将来的に各ステージの学習ページへ遷移

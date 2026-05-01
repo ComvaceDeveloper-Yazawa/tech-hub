@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
-import { backgroundImageChapter } from '@/lib/steps/background-image';
+import { heroSectionChapter } from '@/lib/steps/hero-section';
 import { LearnWorkspace } from '@/components/learn/LearnWorkspace';
 
 const chapters = {
-  'background-image': backgroundImageChapter,
+  'hero-section': heroSectionChapter,
 } as const;
 
 type Params = { chapterId: string };

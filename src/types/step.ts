@@ -25,6 +25,7 @@ export type PracticeStep = {
   hints: string[];
   checkRules: CheckRule[];
   successMessage: string;
+  targetSelector?: string;
 };
 
 export type Step = LessonStep | PracticeStep;
