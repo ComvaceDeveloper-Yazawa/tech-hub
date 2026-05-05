@@ -44,7 +44,11 @@ export function StageMapClient({
   const handleStageClick = (mapStage: { id: string; number: number }) => {
     // サンプルフロントエンドのステージ1だけは既存の学習ワークスペースへ
     if (curriculumSlug === 'frontend' && mapStage.number === 1) {
-      router.push('/learn/hero-section');
+      const params = new URLSearchParams({
+        stageId: mapStage.id,
+        curriculumSlug,
+      });
+      router.push(`/learn/hero-section?${params.toString()}`);
       return;
     }
 
