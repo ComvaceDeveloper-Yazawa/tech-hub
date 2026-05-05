@@ -35,6 +35,9 @@ export default async function StageMapPage({ params }: StageMapPageProps) {
 
   const avatarConfig = profile?.avatarConfig ?? null;
   const completedCount = stages.filter((s) => s.status === 'completed').length;
+  const totalCount = stages.length;
+  const progressPercent =
+    totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   return (
     <div className="relative min-h-screen">
@@ -67,7 +70,7 @@ export default async function StageMapPage({ params }: StageMapPageProps) {
               {curriculum.title}
             </h1>
             <p className="text-xs text-amber-300/70 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
-              {completedCount} / 10 完了
+              {completedCount} / {totalCount} 完了
             </p>
           </div>
         </div>
@@ -77,13 +80,17 @@ export default async function StageMapPage({ params }: StageMapPageProps) {
           <div
             className="h-3 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 shadow-[0_0_8px_rgba(251,191,36,0.4)] transition-all duration-500"
             style={{
-              width: `${(completedCount / 10) * 100}%`,
+              width: `${progressPercent}%`,
             }}
           />
         </div>
 
         {/* ステージマップ */}
-        <StageMapClient stages={stages} avatarConfig={avatarConfig} />
+        <StageMapClient
+          curriculumSlug={slug}
+          stages={stages}
+          avatarConfig={avatarConfig}
+        />
 
         <div className="h-32" />
       </div>
