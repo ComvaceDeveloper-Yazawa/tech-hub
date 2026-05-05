@@ -1,11 +1,12 @@
 'use client';
 
 import { useTransition } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -46,14 +47,20 @@ export function StageContentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{stage.title}</DialogTitle>
-          <DialogDescription>{stage.description}</DialogDescription>
+          <DialogTitle>
+            ステージ{stage.stage_number}: {stage.title}
+          </DialogTitle>
         </DialogHeader>
+        <div className="prose prose-sm dark:prose-invert max-w-none">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {stage.description}
+          </ReactMarkdown>
+        </div>
         <DialogFooter>
           {isCompleted ? (
-            <Badge variant="secondary">✅ クリア済み</Badge>
+            <Badge variant="secondary">クリア済み</Badge>
           ) : (
             <Button onClick={handleComplete} disabled={isPending}>
               {isPending ? '処理中...' : '完了する'}

@@ -8,12 +8,13 @@ import { cn } from '@/lib/cn';
 
 type StepGuideProps = {
   step: PracticeStep;
-  isCleared: boolean;
   onGrade: () => GradeResult;
   onNext: () => void;
   onPrev: () => void;
   isFirstStep: boolean;
   isLastStep: boolean;
+  /** 最終ステップ完了時の進捗記録処理中フラグ。ボタンを無効化する。 */
+  isFinishing?: boolean;
 };
 
 type HintModalProps = {
@@ -28,6 +29,7 @@ type GradeModalProps = {
   onClose: () => void;
   onNext: () => void;
   isLastStep: boolean;
+  isFinishing: boolean;
 };
 
 function GradeModal({
@@ -37,6 +39,7 @@ function GradeModal({
   onClose,
   onNext,
   isLastStep,
+  isFinishing,
 }: GradeModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -91,9 +94,14 @@ function GradeModal({
             <div className="border-t border-slate-100 px-6 py-4">
               <button
                 onClick={onNext}
-                className="w-full rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:bg-indigo-600 active:scale-[0.98]"
+                disabled={isFinishing}
+                className="w-full rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:bg-indigo-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isLastStep ? 'チャプター完了！' : '次のステップへ →'}
+                {isLastStep
+                  ? isFinishing
+                    ? '完了処理中...'
+                    : 'チャプター完了！'
+                  : '次のステップへ →'}
               </button>
             </div>
           </>
@@ -353,12 +361,12 @@ function HintModal({ hints, onClose }: HintModalProps) {
 
 export function StepGuide({
   step,
-  isCleared,
   onGrade,
   onNext,
   onPrev,
   isFirstStep,
   isLastStep,
+  isFinishing = false,
 }: StepGuideProps) {
   const [hintModalOpen, setHintModalOpen] = useState(false);
   const [gradeModalState, setGradeModalState] = useState<
@@ -442,6 +450,7 @@ export function StepGuide({
           onClose={() => setGradeModalState(null)}
           onNext={handleNext}
           isLastStep={isLastStep}
+          isFinishing={isFinishing}
         />
       )}
     </div>
