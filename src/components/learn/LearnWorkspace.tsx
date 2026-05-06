@@ -12,6 +12,7 @@ import { StepGuide } from './StepGuide';
 import { CodeEditor } from './CodeEditor';
 import { Preview } from './Preview';
 import { LessonView } from './LessonView';
+import { BackToStageMapLink } from './BackToStageMapLink';
 
 type LearnWorkspaceProps = {
   chapter: Chapter;
@@ -160,6 +161,9 @@ export function LearnWorkspace({
 
   return (
     <div className="flex h-screen flex-col bg-slate-50">
+      <div className="flex items-center border-b border-slate-200 bg-white px-6 py-2">
+        <BackToStageMapLink curriculumSlug={curriculumSlug} />
+      </div>
       <ProgressBar
         currentStep={currentStepIndex}
         totalSteps={chapter.steps.length}
