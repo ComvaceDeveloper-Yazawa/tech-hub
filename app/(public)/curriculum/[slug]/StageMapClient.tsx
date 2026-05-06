@@ -23,6 +23,17 @@ function toMapStatus(status: StageWithStatus['status']): MapStatus {
   return 'current';
 }
 
+/**
+ * 「カリキュラム slug + ステージ番号」→ 学習ワークスペース chapterId のマップ。
+ * ここに登録したステージだけが /learn/[chapterId] に遷移する。
+ * 未登録のステージは StageContentDialog でダイアログ表示のみ。
+ */
+const STAGE_TO_CHAPTER: Readonly<Record<string, string>> = {
+  'frontend:1': 'hero-section',
+  'cafe-chapter-0:1': 'cafe-ch0-01-vscode-setup',
+  'cafe-chapter-0:5': 'cafe-ch0-05-first-html',
+};
+
 export function StageMapClient({
   curriculumSlug,
   stages,
@@ -42,20 +53,22 @@ export function StageMapClient({
   }));
 
   const handleStageClick = (mapStage: { id: string; number: number }) => {
-    // サンプルフロントエンドのステージ1だけは既存の学習ワークスペースへ
-    if (curriculumSlug === 'frontend' && mapStage.number === 1) {
-      const params = new URLSearchParams({
-        stageId: mapStage.id,
-        curriculumSlug,
-      });
-      router.push(`/learn/hero-section?${params.toString()}`);
-      return;
-    }
-
     const stage = stages.find((s) => s.id === mapStage.id);
     if (!stage) return;
     if (stage.status === 'locked') return;
 
+    // 学習ワークスペースが用意されているステージは /learn/[chapterId] へ
+    const chapterId = STAGE_TO_CHAPTER[`${curriculumSlug}:${mapStage.number}`];
+    if (chapterId) {
+      const params = new URLSearchParams({
+        stageId: mapStage.id,
+        curriculumSlug,
+      });
+      router.push(`/learn/${chapterId}?${params.toString()}`);
+      return;
+    }
+
+    // それ以外は既存どおりダイアログで説明を出す
     setSelectedStage(stage);
     setDialogOpen(true);
   };

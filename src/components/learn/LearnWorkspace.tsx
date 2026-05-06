@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import type { Chapter } from '@/types/step';
 import { evaluateRules, type GradeResult } from '@/lib/checker';
+import { evaluateHtmlRules } from '@/lib/htmlChecker';
 import { completeStage } from '@/presentation/actions/curriculum/completeStage';
 import { ProgressBar } from './ProgressBar';
 import { StepGuide } from './StepGuide';
@@ -51,19 +52,38 @@ export function LearnWorkspace({
     const iframe = iframeRef.current;
     if (!iframe) return { passed: false, failedHints: [] };
     try {
-      const selector = currentStep.targetSelector ?? '.hero';
-      const targetEl = iframe.contentDocument?.querySelector(selector);
-      if (!targetEl)
-        return {
-          passed: false,
-          failedHints: [
-            `\`${selector}\` 要素が見つかりません。HTMLを確認しましょう。`,
-          ],
-        };
-      const style = iframe.contentWindow?.getComputedStyle(targetEl);
-      if (!style) return { passed: false, failedHints: [] };
-      const result = evaluateRules(style, currentStep.checkRules);
-      return result;
+      const doc = iframe.contentDocument;
+      if (!doc) return { passed: false, failedHints: [] };
+
+      // CSS ルール評価（空配列ならスキップ）
+      let cssResult: GradeResult = { passed: true, failedHints: [] };
+      if (currentStep.checkRules.length > 0) {
+        const selector = currentStep.targetSelector ?? '.hero';
+        const targetEl = doc.querySelector(selector);
+        if (!targetEl) {
+          return {
+            passed: false,
+            failedHints: [
+              `\`${selector}\` 要素が見つかりません。HTMLを確認しましょう。`,
+            ],
+          };
+        }
+        const style = iframe.contentWindow?.getComputedStyle(targetEl);
+        if (!style) return { passed: false, failedHints: [] };
+        cssResult = evaluateRules(style, currentStep.checkRules);
+      }
+
+      // HTML ルール評価（空・未定義ならスキップ）
+      const htmlRules = currentStep.htmlCheckRules ?? [];
+      const htmlResult =
+        htmlRules.length > 0
+          ? evaluateHtmlRules(doc, htmlRules)
+          : { passed: true, failedHints: [] };
+
+      return {
+        passed: cssResult.passed && htmlResult.passed,
+        failedHints: [...cssResult.failedHints, ...htmlResult.failedHints],
+      };
     } catch {
       return { passed: false, failedHints: [] };
     }
