@@ -185,19 +185,6 @@ export function CafeCh0VsCodeSetup() {
           </li>
         </ul>
       </section>
-
-      <section className="not-prose mt-8 rounded-xl border border-emerald-200 bg-emerald-50 p-5">
-        <p className="text-sm font-semibold text-emerald-800">
-          このレッスンを完了する条件
-        </p>
-        <ul className="mt-2 space-y-1 text-sm text-emerald-700">
-          <li>・ VS Code を起動できた</li>
-          <li>・ メニューが日本語で表示されている</li>
-        </ul>
-        <p className="mt-3 text-sm text-emerald-700">
-          どちらもできたら、下のボタンで完了しましょう。
-        </p>
-      </section>
     </article>
   );
 }

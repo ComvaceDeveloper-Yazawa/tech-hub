@@ -21,6 +21,10 @@ const readingChapters = {
     id: 'cafe-ch0-01-vscode-setup',
     title: 'VS Code のセットアップ',
     body: <CafeCh0VsCodeSetup />,
+    completionCriteria: [
+      'VS Code を起動できた',
+      'メニューが日本語で表示されている',
+    ],
   },
 } as const satisfies Record<string, ReadingChapter>;
 
