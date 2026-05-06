@@ -31,7 +31,20 @@ function toMapStatus(status: StageWithStatus['status']): MapStatus {
 const STAGE_TO_CHAPTER: Readonly<Record<string, string>> = {
   'frontend:1': 'hero-section',
   'cafe-chapter-0:1': 'cafe-ch0-01-vscode-setup',
+  'cafe-chapter-0:2': 'cafe-ch0-02-vscode-usage',
+  'cafe-chapter-0:3': 'cafe-ch0-03-prettier',
+  'cafe-chapter-0:4': 'cafe-ch0-04-terminal',
   'cafe-chapter-0:5': 'cafe-ch0-05-first-html',
+  'cafe-chapter-0:6': 'cafe-ch0-06-tags',
+  'cafe-chapter-0:7': 'cafe-ch0-07-html-rules',
+  'cafe-chapter-0:8': 'cafe-ch0-08-devtools',
+  'cafe-chapter-0:9': 'cafe-ch0-09-css-basics',
+  'cafe-chapter-0:10': 'cafe-ch0-10-class-selector',
+  'cafe-chapter-0:11': 'cafe-ch0-11-reset-css',
+  'cafe-chapter-0:12': 'cafe-ch0-12-media-query',
+  'cafe-chapter-0:13': 'cafe-ch0-13-git-setup',
+  'cafe-chapter-0:14': 'cafe-ch0-14-repo-setup',
+  'cafe-chapter-0:15': 'cafe-ch0-15-first-pr',
 };
 
 export function StageMapClient({
