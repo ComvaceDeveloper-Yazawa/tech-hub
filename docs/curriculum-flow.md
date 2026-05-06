@@ -268,7 +268,7 @@ type Chapter = {
 
 ```
 /curriculum
-  └── BookShelf (本棚 + 本を開くアニメーション)
+  └── CurriculumList (章カードリスト + 詳細モーダル)
 
 /curriculum/[slug]
   ├── ParallaxBackground (背景画像)

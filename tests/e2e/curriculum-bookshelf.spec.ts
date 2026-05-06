@@ -1,14 +1,12 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('カリキュラム本棚', () => {
-  test('モバイルで本を開いて冒険を続けるリンクをタップできる', async ({
+test.describe('カリキュラム一覧', () => {
+  test('モバイルで章カードをタップしモーダル経由で学習を始められる', async ({
     page,
   }) => {
     // iPhone SE サイズ
     await page.setViewportSize({ width: 375, height: 667 });
 
-    // ログインが必要なのでスキップして直接URLにアクセス
-    // 認証が必要な場合はこのテストは手動確認
     await page.goto('/curriculum');
 
     // ログインページにリダイレクトされる場合はスキップ
@@ -17,19 +15,20 @@ test.describe('カリキュラム本棚', () => {
       return;
     }
 
-    // 本棚が表示されるまで待つ
-    const bookSpine = page.locator('button[aria-label*="を開く"]').first();
-    await expect(bookSpine).toBeVisible({ timeout: 10000 });
+    // 章カードが表示されるまで待つ
+    const chapterCard = page
+      .locator('button[aria-label*="の詳細を表示"]')
+      .first();
+    await expect(chapterCard).toBeVisible({ timeout: 10000 });
 
-    // 本をタップ
-    await bookSpine.click();
+    // 章カードをタップしてモーダルを開く
+    await chapterCard.click();
 
-    // アニメーション完了を待つ（2秒）
-    await page.waitForTimeout(2500);
-
-    // 「冒険を続ける」または「冒険を始める」リンクが表示されるか
-    const startLink = page.locator('a:has-text("冒険")').first();
-    await expect(startLink).toBeVisible({ timeout: 5000 });
+    // モーダル内の「学習を始める」または「続きから学習する」リンクが表示されるか
+    const startLink = page
+      .locator('a:has-text("学習を"), a:has-text("続きから")')
+      .first();
+    await expect(startLink).toBeVisible({ timeout: 3000 });
 
     // リンクのhref属性を確認
     const href = await startLink.getAttribute('href');
