@@ -1,3 +1,5 @@
+import type { HtmlCheckRule } from '@/lib/htmlChecker';
+
 export type CheckRule = {
   property: string;
   condition: 'not-equals' | 'equals' | 'includes';
@@ -23,7 +25,10 @@ export type PracticeStep = {
     css: string;
   };
   hints: string[];
+  /** 対象要素（デフォルト `.hero`）の computed CSS を検査するルール */
   checkRules: CheckRule[];
+  /** 学習者が書いた HTML の DOM 構造・テキストを検査するルール */
+  htmlCheckRules?: HtmlCheckRule[];
   successMessage: string;
   targetSelector?: string;
 };

@@ -3,6 +3,7 @@
 import type { LessonStep } from '@/types/step';
 import { HeroLesson1 } from './lessons/HeroLesson1';
 import { HeroLesson2 } from './lessons/HeroLesson2';
+import { CafeCh0Lesson05Intro } from './lessons/CafeCh0Lesson05Intro';
 
 type LessonViewProps = {
   step: LessonStep;
@@ -23,6 +24,7 @@ const lessonComponents: Record<
 > = {
   'hero-lesson-1': HeroLesson1,
   'hero-lesson-2': HeroLesson2,
+  'cafe-ch0-05-lesson-1': CafeCh0Lesson05Intro,
 };
 
 export function LessonView({
