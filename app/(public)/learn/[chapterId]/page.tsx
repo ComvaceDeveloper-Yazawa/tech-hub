@@ -7,6 +7,21 @@ import { cafeCh0CssBasicsChapter } from '@/lib/steps/cafe-ch0-09-css-basics';
 import { cafeCh0ClassSelectorChapter } from '@/lib/steps/cafe-ch0-10-class-selector';
 import { cafeCh0ResetCssChapter } from '@/lib/steps/cafe-ch0-11-reset-css';
 import { cafeCh0MediaQueryChapter } from '@/lib/steps/cafe-ch0-12-media-query';
+import {
+  cafeCh1FontsChapter,
+  cafeCh1ImagesChapter,
+  cafeCh1BoxModelChapter,
+  cafeCh1ContainerChapter,
+  cafeCh1FlexboxChapter,
+  cafeCh1GridChapter,
+  cafeCh1HoverChapter,
+  cafeCh1FormChapter,
+  cafeCh1MainViewChapter,
+  cafeCh1ButtonBarChapter,
+  cafeCh1ProductListsChapter,
+  cafeCh1CtaChapter,
+  cafeCh1ResponsiveChapter,
+} from '@/lib/steps/cafe-ch1-chapters';
 import { LearnWorkspace } from '@/components/learn/LearnWorkspace';
 import {
   ReadingWorkspace,
@@ -21,6 +36,7 @@ import { CafeCh0DevTools } from '@/components/learn/readings/CafeCh0DevTools';
 import { CafeCh0GitSetup } from '@/components/learn/readings/CafeCh0GitSetup';
 import { CafeCh0RepoSetup } from '@/components/learn/readings/CafeCh0RepoSetup';
 import { CafeCh0FirstPullRequest } from '@/components/learn/readings/CafeCh0FirstPullRequest';
+import { CafeCh1ReadDesign } from '@/components/learn/readings/CafeCh1ReadDesign';
 
 /** コードエディタ付きの実習チャプター */
 const practiceChapters = {
@@ -32,6 +48,19 @@ const practiceChapters = {
   'cafe-ch0-10-class-selector': cafeCh0ClassSelectorChapter,
   'cafe-ch0-11-reset-css': cafeCh0ResetCssChapter,
   'cafe-ch0-12-media-query': cafeCh0MediaQueryChapter,
+  'cafe-ch1-02-fonts': cafeCh1FontsChapter,
+  'cafe-ch1-03-images': cafeCh1ImagesChapter,
+  'cafe-ch1-04-box-model': cafeCh1BoxModelChapter,
+  'cafe-ch1-05-container': cafeCh1ContainerChapter,
+  'cafe-ch1-06-flexbox': cafeCh1FlexboxChapter,
+  'cafe-ch1-07-grid': cafeCh1GridChapter,
+  'cafe-ch1-08-hover': cafeCh1HoverChapter,
+  'cafe-ch1-09-form': cafeCh1FormChapter,
+  'cafe-ch1-10-mainview': cafeCh1MainViewChapter,
+  'cafe-ch1-11-buttonbar': cafeCh1ButtonBarChapter,
+  'cafe-ch1-12-productlists': cafeCh1ProductListsChapter,
+  'cafe-ch1-13-cta': cafeCh1CtaChapter,
+  'cafe-ch1-14-responsive': cafeCh1ResponsiveChapter,
 } as const satisfies Record<string, Chapter>;
 
 /** 実習コードを伴わない読み物チャプター */
@@ -116,6 +145,16 @@ const readingChapters = {
       'add と commit で変更を記録できた',
       'push で GitHub に反映できた',
       'Pull Request を作成できた',
+    ],
+  },
+  'cafe-ch1-01-read-design': {
+    id: 'cafe-ch1-01-read-design',
+    title: 'デザインを読み解こう',
+    body: <CafeCh1ReadDesign />,
+    completionCriteria: [
+      'Figma でホーム画面のフレームを開けた',
+      '色・フォント・サイズを読み取る方法が分かった',
+      '必要な画像をエクスポートできた',
     ],
   },
 } as const satisfies Record<string, ReadingChapter>;

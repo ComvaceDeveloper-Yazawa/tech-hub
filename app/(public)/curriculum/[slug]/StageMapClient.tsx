@@ -45,6 +45,20 @@ const STAGE_TO_CHAPTER: Readonly<Record<string, string>> = {
   'cafe-chapter-0:13': 'cafe-ch0-13-git-setup',
   'cafe-chapter-0:14': 'cafe-ch0-14-repo-setup',
   'cafe-chapter-0:15': 'cafe-ch0-15-first-pr',
+  'cafe-chapter-1:1': 'cafe-ch1-01-read-design',
+  'cafe-chapter-1:2': 'cafe-ch1-02-fonts',
+  'cafe-chapter-1:3': 'cafe-ch1-03-images',
+  'cafe-chapter-1:4': 'cafe-ch1-04-box-model',
+  'cafe-chapter-1:5': 'cafe-ch1-05-container',
+  'cafe-chapter-1:6': 'cafe-ch1-06-flexbox',
+  'cafe-chapter-1:7': 'cafe-ch1-07-grid',
+  'cafe-chapter-1:8': 'cafe-ch1-08-hover',
+  'cafe-chapter-1:9': 'cafe-ch1-09-form',
+  'cafe-chapter-1:10': 'cafe-ch1-10-mainview',
+  'cafe-chapter-1:11': 'cafe-ch1-11-buttonbar',
+  'cafe-chapter-1:12': 'cafe-ch1-12-productlists',
+  'cafe-chapter-1:13': 'cafe-ch1-13-cta',
+  'cafe-chapter-1:14': 'cafe-ch1-14-responsive',
 };
 
 export function StageMapClient({
