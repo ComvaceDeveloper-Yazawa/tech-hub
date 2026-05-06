@@ -10,6 +10,21 @@ import { CafeCh0Lesson09Intro } from './lessons/CafeCh0Lesson09Intro';
 import { CafeCh0Lesson10Intro } from './lessons/CafeCh0Lesson10Intro';
 import { CafeCh0Lesson11Intro } from './lessons/CafeCh0Lesson11Intro';
 import { CafeCh0Lesson12Intro } from './lessons/CafeCh0Lesson12Intro';
+import {
+  CafeCh1Lesson02Intro,
+  CafeCh1Lesson03Intro,
+  CafeCh1Lesson04Intro,
+  CafeCh1Lesson05Intro,
+  CafeCh1Lesson06Intro,
+  CafeCh1Lesson07Intro,
+  CafeCh1Lesson08Intro,
+  CafeCh1Lesson09Intro,
+  CafeCh1Lesson10Intro,
+  CafeCh1Lesson11Intro,
+  CafeCh1Lesson12Intro,
+  CafeCh1Lesson13Intro,
+  CafeCh1Lesson14Intro,
+} from './lessons/CafeCh1Intros';
 
 type LessonViewProps = {
   step: LessonStep;
@@ -37,6 +52,19 @@ const lessonComponents: Record<
   'cafe-ch0-10-lesson-1': CafeCh0Lesson10Intro,
   'cafe-ch0-11-lesson-1': CafeCh0Lesson11Intro,
   'cafe-ch0-12-lesson-1': CafeCh0Lesson12Intro,
+  'cafe-ch1-02-lesson-1': CafeCh1Lesson02Intro,
+  'cafe-ch1-03-lesson-1': CafeCh1Lesson03Intro,
+  'cafe-ch1-04-lesson-1': CafeCh1Lesson04Intro,
+  'cafe-ch1-05-lesson-1': CafeCh1Lesson05Intro,
+  'cafe-ch1-06-lesson-1': CafeCh1Lesson06Intro,
+  'cafe-ch1-07-lesson-1': CafeCh1Lesson07Intro,
+  'cafe-ch1-08-lesson-1': CafeCh1Lesson08Intro,
+  'cafe-ch1-09-lesson-1': CafeCh1Lesson09Intro,
+  'cafe-ch1-10-lesson-1': CafeCh1Lesson10Intro,
+  'cafe-ch1-11-lesson-1': CafeCh1Lesson11Intro,
+  'cafe-ch1-12-lesson-1': CafeCh1Lesson12Intro,
+  'cafe-ch1-13-lesson-1': CafeCh1Lesson13Intro,
+  'cafe-ch1-14-lesson-1': CafeCh1Lesson14Intro,
 };
 
 export function LessonView({
