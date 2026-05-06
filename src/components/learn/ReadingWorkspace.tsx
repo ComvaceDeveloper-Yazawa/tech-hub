@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { completeStage } from '@/presentation/actions/curriculum/completeStage';
+import { BackToStageMapLink } from './BackToStageMapLink';
 
 export type ReadingChapter = {
   id: string;
@@ -79,7 +80,9 @@ export function ReadingWorkspace({
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="border-b border-slate-200 bg-white px-6 py-3">
+      <div className="flex items-center gap-3 border-b border-slate-200 bg-white px-6 py-3">
+        <BackToStageMapLink curriculumSlug={curriculumSlug} />
+        <span className="h-4 w-px bg-slate-200" aria-hidden="true" />
         <h1 className="text-sm font-semibold text-slate-700">
           {chapter.title}
         </h1>
