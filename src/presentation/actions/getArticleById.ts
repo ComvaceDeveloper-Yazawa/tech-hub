@@ -12,6 +12,7 @@ export async function getArticleById(input: { articleId: string }): Promise<{
   slug: string;
   content: string;
   status: string;
+  authorId: string;
   viewCount: number;
   likeCount: number;
   publishedAt: string | null;
@@ -50,6 +51,7 @@ export async function getArticleById(input: { articleId: string }): Promise<{
     slug: article.slug.toString(),
     content: article.content.toString(),
     status: article.status.toString(),
+    authorId: article.authorId.toString(),
     viewCount: article.viewCount.toNumber(),
     likeCount: article.likeCount.toNumber(),
     publishedAt: article.publishedAt?.toISOString() ?? null,

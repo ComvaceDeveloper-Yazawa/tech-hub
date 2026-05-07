@@ -41,7 +41,7 @@ export default async function MyPagePage() {
       </section>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <Link href="/admin/articles">
+        <Link href="/mypage/articles">
           <Card className="flex cursor-pointer flex-col items-center justify-center gap-4 p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
             <PencilIcon className="text-primary size-12" />
             <h2 className="text-xl font-semibold">マイ記事</h2>

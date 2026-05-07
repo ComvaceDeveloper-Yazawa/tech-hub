@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { Header } from '@/components/features/Header';
 import { AdminSidebar } from '@/components/features/AdminSidebar';
 import { AdminMobileSidebar } from '@/components/features/AdminMobileSidebar';
+import { requireAdmin } from '@/presentation/guards/requireAdmin';
+import { PermissionDeniedError } from '@/contexts/shared-kernel/PermissionDeniedError';
 
 export default async function AdminLayout({
   children,
@@ -15,6 +17,15 @@ export default async function AdminLayout({
   } = await supabase.auth.getUser();
 
   if (!user) {
+    redirect('/login');
+  }
+
+  try {
+    await requireAdmin();
+  } catch (error) {
+    if (error instanceof PermissionDeniedError) {
+      redirect('/unauthorized');
+    }
     redirect('/login');
   }
 

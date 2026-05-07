@@ -4,12 +4,15 @@ import type { ArticleTitle } from '@/contexts/publishing/domain/article/ArticleT
 import type { ArticleContent } from '@/contexts/publishing/domain/article/ArticleContent';
 import type { Slug } from '@/contexts/publishing/domain/article/Slug';
 import type { TenantId } from '@/contexts/shared-kernel/TenantId';
+import type { UserId } from '@/contexts/shared-kernel/UserId';
 import type { TagId } from '@/contexts/shared-kernel/TagId';
 import { ApplicationError } from '@/contexts/shared-kernel/ApplicationError';
+import { PermissionDeniedError } from '@/contexts/shared-kernel/PermissionDeniedError';
 
 export interface UpdateArticleInput {
   articleId: ArticleId;
   tenantId: TenantId;
+  requesterId: UserId;
   title?: ArticleTitle;
   content?: ArticleContent;
   slug?: Slug;
@@ -26,6 +29,10 @@ export class UpdateArticleUseCase {
     );
     if (!article) {
       throw new ApplicationError('記事が見つかりません');
+    }
+
+    if (!article.canBeEditedBy(input.requesterId)) {
+      throw new PermissionDeniedError('記事を編集する権限がありません');
     }
 
     if (input.slug !== undefined) {

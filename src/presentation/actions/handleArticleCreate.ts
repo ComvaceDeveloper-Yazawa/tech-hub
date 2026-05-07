@@ -10,5 +10,5 @@ export async function handleArticleCreate(data: {
   tagNames?: string[];
 }) {
   await createArticle(data);
-  redirect('/admin/articles');
+  redirect('/mypage/articles');
 }

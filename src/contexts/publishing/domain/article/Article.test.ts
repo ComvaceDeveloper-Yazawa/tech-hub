@@ -282,4 +282,98 @@ describe('Article', () => {
       expect(article1.equals(article2)).toBe(true);
     });
   });
+
+  describe('編集権限', () => {
+    const authorId = UserId.fromString('01KQ06J55G7P1RPHZRXJNQZY1J');
+    const otherUserId = UserId.fromString('01KQ06J562A70XFYHDVHRM0ZY1');
+
+    it('作成者は記事を編集できる', () => {
+      const article = Article.create(
+        ArticleId.generate(),
+        TenantId.personal(),
+        ArticleTitle.fromString('タイトル'),
+        ArticleContent.fromString('本文'),
+        Slug.fromString('slug'),
+        authorId
+      );
+
+      expect(article.canBeEditedBy(authorId)).toBe(true);
+    });
+
+    it('作成者以外は記事を編集できない（admin も不可）', () => {
+      const article = Article.create(
+        ArticleId.generate(),
+        TenantId.personal(),
+        ArticleTitle.fromString('タイトル'),
+        ArticleContent.fromString('本文'),
+        Slug.fromString('slug'),
+        authorId
+      );
+
+      expect(article.canBeEditedBy(otherUserId)).toBe(false);
+    });
+  });
+
+  describe('非公開化・削除の権限', () => {
+    const authorId = UserId.fromString('01KQ06J55G7P1RPHZRXJNQZY1J');
+    const otherUserId = UserId.fromString('01KQ06J562A70XFYHDVHRM0ZY1');
+
+    const buildArticle = () =>
+      Article.create(
+        ArticleId.generate(),
+        TenantId.personal(),
+        ArticleTitle.fromString('タイトル'),
+        ArticleContent.fromString('本文'),
+        Slug.fromString('slug'),
+        authorId
+      );
+
+    it('作成者は管理者権限なしでも削除できる', () => {
+      const article = buildArticle();
+
+      expect(article.canBeDeletedBy(authorId, { isPrivileged: false })).toBe(
+        true
+      );
+    });
+
+    it('管理者権限を持つ他ユーザーは削除できる', () => {
+      const article = buildArticle();
+
+      expect(article.canBeDeletedBy(otherUserId, { isPrivileged: true })).toBe(
+        true
+      );
+    });
+
+    it('管理者権限のない他ユーザーは削除できない', () => {
+      const article = buildArticle();
+
+      expect(article.canBeDeletedBy(otherUserId, { isPrivileged: false })).toBe(
+        false
+      );
+    });
+
+    it('作成者は管理者権限なしでも非公開化できる', () => {
+      const article = buildArticle();
+
+      expect(
+        article.canBeUnpublishedBy(authorId, { isPrivileged: false })
+      ).toBe(true);
+    });
+
+    it('管理者権限を持つ他ユーザーは非公開化できる', () => {
+      const article = buildArticle();
+
+      expect(
+        article.canBeUnpublishedBy(otherUserId, { isPrivileged: true })
+      ).toBe(true);
+    });
+
+    it('管理者権限のない他ユーザーは非公開化できない', () => {
+      const article = buildArticle();
+
+      expect(
+        article.canBeUnpublishedBy(otherUserId, { isPrivileged: false })
+      ).toBe(false);
+    });
+  });
 });

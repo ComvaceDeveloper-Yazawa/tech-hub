@@ -11,6 +11,10 @@ import { ArticleDeleted } from '@/contexts/publishing/domain/article/ArticleDele
 import { TenantId } from '@/contexts/shared-kernel/TenantId';
 import { UserId } from '@/contexts/shared-kernel/UserId';
 import { ApplicationError } from '@/contexts/shared-kernel/ApplicationError';
+import { PermissionDeniedError } from '@/contexts/shared-kernel/PermissionDeniedError';
+
+const AUTHOR_ID = '01JXGR5KXWT0001AAAAAAAAAAA';
+const OTHER_USER_ID = '01KQ06J562A70XFYHDVHRM0ZY1';
 
 function createTestArticle() {
   const article = Article.create(
@@ -19,7 +23,7 @@ function createTestArticle() {
     ArticleTitle.fromString('テスト記事'),
     ArticleContent.fromString('本文です'),
     Slug.fromString('test-article'),
-    UserId.fromString('01JXGR5KXWT0001AAAAAAAAAAA')
+    UserId.fromString(AUTHOR_ID)
   );
   article.clearDomainEvents();
   return article;
@@ -48,7 +52,7 @@ describe('DeleteArticleUseCase', () => {
   });
 
   describe('正常系', () => {
-    it('記事を削除できる', async () => {
+    it('作成者は自分の記事を削除できる', async () => {
       // Arrange
       const article = createTestArticle();
       vi.mocked(mockRepository.findById).mockResolvedValue(article);
@@ -57,6 +61,28 @@ describe('DeleteArticleUseCase', () => {
       await useCase.execute({
         articleId: article.id,
         tenantId: TenantId.personal(),
+        requesterId: UserId.fromString(AUTHOR_ID),
+        isPrivilegedActor: false,
+      });
+
+      // Assert
+      expect(mockRepository.delete).toHaveBeenCalledWith(
+        article.id,
+        TenantId.personal()
+      );
+    });
+
+    it('管理者は他ユーザーの記事を削除できる', async () => {
+      // Arrange
+      const article = createTestArticle();
+      vi.mocked(mockRepository.findById).mockResolvedValue(article);
+
+      // Act
+      await useCase.execute({
+        articleId: article.id,
+        tenantId: TenantId.personal(),
+        requesterId: UserId.fromString(OTHER_USER_ID),
+        isPrivilegedActor: true,
       });
 
       // Assert
@@ -75,6 +101,8 @@ describe('DeleteArticleUseCase', () => {
       await useCase.execute({
         articleId: article.id,
         tenantId: TenantId.personal(),
+        requesterId: UserId.fromString(AUTHOR_ID),
+        isPrivilegedActor: false,
       });
 
       // Assert
@@ -95,14 +123,35 @@ describe('DeleteArticleUseCase', () => {
         useCase.execute({
           articleId: ArticleId.generate(),
           tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(AUTHOR_ID),
+          isPrivilegedActor: false,
         })
       ).rejects.toThrow(ApplicationError);
       await expect(
         useCase.execute({
           articleId: ArticleId.generate(),
           tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(AUTHOR_ID),
+          isPrivilegedActor: false,
         })
       ).rejects.toThrow('記事が見つかりません');
+    });
+
+    it('管理者権限のない他ユーザーは他人の記事を削除できない', async () => {
+      // Arrange
+      const article = createTestArticle();
+      vi.mocked(mockRepository.findById).mockResolvedValue(article);
+
+      // Act & Assert
+      await expect(
+        useCase.execute({
+          articleId: article.id,
+          tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(OTHER_USER_ID),
+          isPrivilegedActor: false,
+        })
+      ).rejects.toThrow(PermissionDeniedError);
+      expect(mockRepository.delete).not.toHaveBeenCalled();
     });
   });
 });

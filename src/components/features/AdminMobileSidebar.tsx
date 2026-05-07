@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, FileText, PlusCircle, ImageIcon } from 'lucide-react';
+import { Menu, ImageIcon, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -15,8 +15,7 @@ import {
 import { cn } from '@/lib/cn';
 
 const NAV_ITEMS = [
-  { href: '/admin/articles', label: '記事一覧', icon: FileText },
-  { href: '/admin/articles/new', label: '新規作成', icon: PlusCircle },
+  { href: '/admin/users', label: 'ユーザー一覧', icon: Users },
   { href: '/admin/media', label: 'メディア', icon: ImageIcon },
 ] as const;
 
@@ -47,17 +46,14 @@ export function AdminMobileSidebar() {
             aria-label="管理ナビゲーション"
           >
             {NAV_ITEMS.map((item) => {
-              const isActive =
-                item.href === '/admin/articles'
-                  ? pathname === '/admin/articles'
-                  : pathname.startsWith(item.href);
+              const isActive = pathname.startsWith(item.href);
 
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'focus-visible:ring-ring flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none',
+                    'focus-visible:ring-ring flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2',
                     isActive
                       ? 'bg-muted text-foreground'
                       : 'text-muted-foreground hover:bg-muted hover:text-foreground'

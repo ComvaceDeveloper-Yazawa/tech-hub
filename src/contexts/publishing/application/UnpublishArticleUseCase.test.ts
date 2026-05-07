@@ -12,6 +12,10 @@ import { TenantId } from '@/contexts/shared-kernel/TenantId';
 import { UserId } from '@/contexts/shared-kernel/UserId';
 import { ApplicationError } from '@/contexts/shared-kernel/ApplicationError';
 import { DomainError } from '@/contexts/shared-kernel/DomainError';
+import { PermissionDeniedError } from '@/contexts/shared-kernel/PermissionDeniedError';
+
+const AUTHOR_ID = '01JXGR5KXWT0001AAAAAAAAAAA';
+const OTHER_USER_ID = '01KQ06J562A70XFYHDVHRM0ZY1';
 
 function createPublishedArticle() {
   const article = Article.create(
@@ -20,7 +24,7 @@ function createPublishedArticle() {
     ArticleTitle.fromString('テスト記事'),
     ArticleContent.fromString('本文です'),
     Slug.fromString('test-article'),
-    UserId.fromString('01JXGR5KXWT0001AAAAAAAAAAA')
+    UserId.fromString(AUTHOR_ID)
   );
   article.publish();
   article.clearDomainEvents();
@@ -50,7 +54,7 @@ describe('UnpublishArticleUseCase', () => {
   });
 
   describe('正常系', () => {
-    it('記事を非公開にできる', async () => {
+    it('作成者は自分の記事を非公開にできる', async () => {
       // Arrange
       const article = createPublishedArticle();
       vi.mocked(mockRepository.findById).mockResolvedValue(article);
@@ -59,6 +63,26 @@ describe('UnpublishArticleUseCase', () => {
       await useCase.execute({
         articleId: article.id,
         tenantId: TenantId.personal(),
+        requesterId: UserId.fromString(AUTHOR_ID),
+        isPrivilegedActor: false,
+      });
+
+      // Assert
+      expect(article.isDraft()).toBe(true);
+      expect(mockRepository.save).toHaveBeenCalledWith(article);
+    });
+
+    it('管理者は他ユーザーの記事を非公開にできる', async () => {
+      // Arrange
+      const article = createPublishedArticle();
+      vi.mocked(mockRepository.findById).mockResolvedValue(article);
+
+      // Act
+      await useCase.execute({
+        articleId: article.id,
+        tenantId: TenantId.personal(),
+        requesterId: UserId.fromString(OTHER_USER_ID),
+        isPrivilegedActor: true,
       });
 
       // Assert
@@ -75,6 +99,8 @@ describe('UnpublishArticleUseCase', () => {
       await useCase.execute({
         articleId: article.id,
         tenantId: TenantId.personal(),
+        requesterId: UserId.fromString(AUTHOR_ID),
+        isPrivilegedActor: false,
       });
 
       // Assert
@@ -94,12 +120,16 @@ describe('UnpublishArticleUseCase', () => {
         useCase.execute({
           articleId: ArticleId.generate(),
           tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(AUTHOR_ID),
+          isPrivilegedActor: false,
         })
       ).rejects.toThrow(ApplicationError);
       await expect(
         useCase.execute({
           articleId: ArticleId.generate(),
           tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(AUTHOR_ID),
+          isPrivilegedActor: false,
         })
       ).rejects.toThrow('記事が見つかりません');
     });
@@ -112,7 +142,7 @@ describe('UnpublishArticleUseCase', () => {
         ArticleTitle.fromString('テスト記事'),
         ArticleContent.fromString('本文です'),
         Slug.fromString('test-article'),
-        UserId.fromString('01JXGR5KXWT0001AAAAAAAAAAA')
+        UserId.fromString(AUTHOR_ID)
       );
       article.clearDomainEvents();
       vi.mocked(mockRepository.findById).mockResolvedValue(article);
@@ -122,14 +152,35 @@ describe('UnpublishArticleUseCase', () => {
         useCase.execute({
           articleId: article.id,
           tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(AUTHOR_ID),
+          isPrivilegedActor: false,
         })
       ).rejects.toThrow(DomainError);
       await expect(
         useCase.execute({
           articleId: article.id,
           tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(AUTHOR_ID),
+          isPrivilegedActor: false,
         })
       ).rejects.toThrow('既に下書き状態です');
+    });
+
+    it('管理者権限のない他ユーザーは他人の記事を非公開にできない', async () => {
+      // Arrange
+      const article = createPublishedArticle();
+      vi.mocked(mockRepository.findById).mockResolvedValue(article);
+
+      // Act & Assert
+      await expect(
+        useCase.execute({
+          articleId: article.id,
+          tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(OTHER_USER_ID),
+          isPrivilegedActor: false,
+        })
+      ).rejects.toThrow(PermissionDeniedError);
+      expect(mockRepository.save).not.toHaveBeenCalled();
     });
   });
 });

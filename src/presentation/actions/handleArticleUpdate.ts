@@ -13,5 +13,5 @@ export async function handleArticleUpdate(
   }
 ) {
   await updateArticle({ articleId, ...data });
-  redirect('/admin/articles');
+  redirect('/mypage/articles');
 }

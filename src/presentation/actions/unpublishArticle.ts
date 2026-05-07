@@ -7,10 +7,12 @@ import { TenantId } from '@/contexts/shared-kernel/TenantId';
 import { PrismaArticleRepository } from '@/contexts/publishing/infrastructure/PrismaArticleRepository';
 import { NoopDomainEventPublisher } from '@/lib/event-publisher';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/presentation/guards/requireAuth';
 
 export async function unpublishArticle(input: {
   articleId: string;
 }): Promise<void> {
+  const currentUser = await requireAuth();
   const validated = unpublishArticleInputSchema.parse(input);
 
   const articleId = ArticleId.fromString(validated.articleId);
@@ -20,5 +22,10 @@ export async function unpublishArticle(input: {
   const eventPublisher = new NoopDomainEventPublisher();
   const useCase = new UnpublishArticleUseCase(repository, eventPublisher);
 
-  await useCase.execute({ articleId, tenantId });
+  await useCase.execute({
+    articleId,
+    tenantId,
+    requesterId: currentUser.id,
+    isPrivilegedActor: currentUser.canModerateContent(),
+  });
 }

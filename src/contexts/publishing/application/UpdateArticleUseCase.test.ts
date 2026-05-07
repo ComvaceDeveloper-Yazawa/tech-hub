@@ -10,6 +10,10 @@ import { TenantId } from '@/contexts/shared-kernel/TenantId';
 import { UserId } from '@/contexts/shared-kernel/UserId';
 import { TagId } from '@/contexts/shared-kernel/TagId';
 import { ApplicationError } from '@/contexts/shared-kernel/ApplicationError';
+import { PermissionDeniedError } from '@/contexts/shared-kernel/PermissionDeniedError';
+
+const AUTHOR_ID = '01JXGR5KXWT0001AAAAAAAAAAA';
+const OTHER_USER_ID = '01KQ06J562A70XFYHDVHRM0ZY1';
 
 function createTestArticle(overrides?: { slug?: Slug }) {
   return Article.create(
@@ -18,7 +22,7 @@ function createTestArticle(overrides?: { slug?: Slug }) {
     ArticleTitle.fromString('元のタイトル'),
     ArticleContent.fromString('元の本文'),
     overrides?.slug ?? Slug.fromString('original-slug'),
-    UserId.fromString('01JXGR5KXWT0001AAAAAAAAAAA')
+    UserId.fromString(AUTHOR_ID)
   );
 }
 
@@ -51,6 +55,7 @@ describe('UpdateArticleUseCase', () => {
       await useCase.execute({
         articleId: article.id,
         tenantId: TenantId.personal(),
+        requesterId: UserId.fromString(AUTHOR_ID),
         title: newTitle,
       });
 
@@ -69,6 +74,7 @@ describe('UpdateArticleUseCase', () => {
       await useCase.execute({
         articleId: article.id,
         tenantId: TenantId.personal(),
+        requesterId: UserId.fromString(AUTHOR_ID),
         content: newContent,
       });
 
@@ -87,6 +93,7 @@ describe('UpdateArticleUseCase', () => {
       await useCase.execute({
         articleId: article.id,
         tenantId: TenantId.personal(),
+        requesterId: UserId.fromString(AUTHOR_ID),
         slug: newSlug,
       });
 
@@ -108,6 +115,7 @@ describe('UpdateArticleUseCase', () => {
       await useCase.execute({
         articleId: article.id,
         tenantId: TenantId.personal(),
+        requesterId: UserId.fromString(AUTHOR_ID),
         tagIds: newTagIds,
       });
 
@@ -127,6 +135,7 @@ describe('UpdateArticleUseCase', () => {
         useCase.execute({
           articleId: ArticleId.generate(),
           tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(AUTHOR_ID),
           title: ArticleTitle.fromString('新しいタイトル'),
         })
       ).rejects.toThrow(ApplicationError);
@@ -134,6 +143,7 @@ describe('UpdateArticleUseCase', () => {
         useCase.execute({
           articleId: ArticleId.generate(),
           tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(AUTHOR_ID),
           title: ArticleTitle.fromString('新しいタイトル'),
         })
       ).rejects.toThrow('記事が見つかりません');
@@ -150,6 +160,7 @@ describe('UpdateArticleUseCase', () => {
         useCase.execute({
           articleId: article.id,
           tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(AUTHOR_ID),
           slug: Slug.fromString('duplicate-slug'),
         })
       ).rejects.toThrow(ApplicationError);
@@ -157,9 +168,27 @@ describe('UpdateArticleUseCase', () => {
         useCase.execute({
           articleId: article.id,
           tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(AUTHOR_ID),
           slug: Slug.fromString('duplicate-slug'),
         })
       ).rejects.toThrow('このスラッグは既に使用されています');
+    });
+
+    it('作成者以外が編集しようとすると PermissionDeniedError を投げる', async () => {
+      // Arrange
+      const article = createTestArticle();
+      vi.mocked(mockRepository.findById).mockResolvedValue(article);
+
+      // Act & Assert
+      await expect(
+        useCase.execute({
+          articleId: article.id,
+          tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(OTHER_USER_ID),
+          title: ArticleTitle.fromString('不正な更新'),
+        })
+      ).rejects.toThrow(PermissionDeniedError);
+      expect(mockRepository.save).not.toHaveBeenCalled();
     });
   });
 });

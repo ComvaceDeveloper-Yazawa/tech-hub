@@ -210,6 +210,24 @@ export class Article {
     return this._status.isPublished();
   }
 
+  canBeEditedBy(requesterId: UserId): boolean {
+    return this._authorId.equals(requesterId);
+  }
+
+  canBeDeletedBy(
+    requesterId: UserId,
+    options: { isPrivileged: boolean }
+  ): boolean {
+    return this._authorId.equals(requesterId) || options.isPrivileged;
+  }
+
+  canBeUnpublishedBy(
+    requesterId: UserId,
+    options: { isPrivileged: boolean }
+  ): boolean {
+    return this._authorId.equals(requesterId) || options.isPrivileged;
+  }
+
   equals(other: Article): boolean {
     return this._id.equals(other._id);
   }

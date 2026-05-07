@@ -12,6 +12,10 @@ import { TenantId } from '@/contexts/shared-kernel/TenantId';
 import { UserId } from '@/contexts/shared-kernel/UserId';
 import { ApplicationError } from '@/contexts/shared-kernel/ApplicationError';
 import { DomainError } from '@/contexts/shared-kernel/DomainError';
+import { PermissionDeniedError } from '@/contexts/shared-kernel/PermissionDeniedError';
+
+const AUTHOR_ID = '01JXGR5KXWT0001AAAAAAAAAAA';
+const OTHER_USER_ID = '01KQ06J562A70XFYHDVHRM0ZY1';
 
 function createDraftArticle() {
   const article = Article.create(
@@ -20,7 +24,7 @@ function createDraftArticle() {
     ArticleTitle.fromString('テスト記事'),
     ArticleContent.fromString('本文です'),
     Slug.fromString('test-article'),
-    UserId.fromString('01JXGR5KXWT0001AAAAAAAAAAA')
+    UserId.fromString(AUTHOR_ID)
   );
   article.clearDomainEvents();
   return article;
@@ -49,7 +53,7 @@ describe('PublishArticleUseCase', () => {
   });
 
   describe('正常系', () => {
-    it('記事を公開できる', async () => {
+    it('作成者は自分の記事を公開できる', async () => {
       // Arrange
       const article = createDraftArticle();
       vi.mocked(mockRepository.findById).mockResolvedValue(article);
@@ -58,6 +62,7 @@ describe('PublishArticleUseCase', () => {
       await useCase.execute({
         articleId: article.id,
         tenantId: TenantId.personal(),
+        requesterId: UserId.fromString(AUTHOR_ID),
       });
 
       // Assert
@@ -74,6 +79,7 @@ describe('PublishArticleUseCase', () => {
       await useCase.execute({
         articleId: article.id,
         tenantId: TenantId.personal(),
+        requesterId: UserId.fromString(AUTHOR_ID),
       });
 
       // Assert
@@ -93,12 +99,14 @@ describe('PublishArticleUseCase', () => {
         useCase.execute({
           articleId: ArticleId.generate(),
           tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(AUTHOR_ID),
         })
       ).rejects.toThrow(ApplicationError);
       await expect(
         useCase.execute({
           articleId: ArticleId.generate(),
           tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(AUTHOR_ID),
         })
       ).rejects.toThrow('記事が見つかりません');
     });
@@ -111,7 +119,7 @@ describe('PublishArticleUseCase', () => {
         ArticleTitle.fromString('テスト記事'),
         ArticleContent.fromString(''),
         Slug.fromString('test-article'),
-        UserId.fromString('01JXGR5KXWT0001AAAAAAAAAAA')
+        UserId.fromString(AUTHOR_ID)
       );
       article.clearDomainEvents();
       vi.mocked(mockRepository.findById).mockResolvedValue(article);
@@ -121,6 +129,7 @@ describe('PublishArticleUseCase', () => {
         useCase.execute({
           articleId: article.id,
           tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(AUTHOR_ID),
         })
       ).rejects.toThrow(DomainError);
     });
@@ -137,14 +146,32 @@ describe('PublishArticleUseCase', () => {
         useCase.execute({
           articleId: article.id,
           tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(AUTHOR_ID),
         })
       ).rejects.toThrow(DomainError);
       await expect(
         useCase.execute({
           articleId: article.id,
           tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(AUTHOR_ID),
         })
       ).rejects.toThrow('既に公開済みです');
+    });
+
+    it('作成者以外が公開しようとすると PermissionDeniedError を投げる', async () => {
+      // Arrange
+      const article = createDraftArticle();
+      vi.mocked(mockRepository.findById).mockResolvedValue(article);
+
+      // Act & Assert
+      await expect(
+        useCase.execute({
+          articleId: article.id,
+          tenantId: TenantId.personal(),
+          requesterId: UserId.fromString(OTHER_USER_ID),
+        })
+      ).rejects.toThrow(PermissionDeniedError);
+      expect(mockRepository.save).not.toHaveBeenCalled();
     });
   });
 });
