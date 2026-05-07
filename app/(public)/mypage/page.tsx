@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { BookmarkIcon, PencilIcon, AwardIcon } from 'lucide-react';
 import { getProfile } from '@/presentation/actions/avatar';
 import { AvatarCreator } from '@/components/features/AvatarCreator';
+import { LogoutButton } from '@/components/features/LogoutButton';
 import type { AvatarConfig } from '@/types/avatar';
 
 export default async function MyPagePage() {
@@ -33,7 +34,10 @@ export default async function MyPagePage() {
       {/* プロフィールセクション */}
       <section className="mb-10">
         <h2 className="mb-4 text-xl font-semibold">プロフィール</h2>
-        <AvatarCreator initialConfig={avatarConfig} initialDisplayName={displayName} />
+        <AvatarCreator
+          initialConfig={avatarConfig}
+          initialDisplayName={displayName}
+        />
       </section>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -70,6 +74,17 @@ export default async function MyPagePage() {
           </Card>
         </Link>
       </div>
+
+      {/* アカウントセクション */}
+      <section className="border-border mt-12 border-t pt-8">
+        <h2 className="mb-4 text-xl font-semibold">アカウント</h2>
+        <Card className="flex flex-col items-start gap-3 p-6">
+          <p className="text-muted-foreground text-sm">
+            ログアウトすると、次回アクセス時に再度ログインが必要になります。
+          </p>
+          <LogoutButton />
+        </Card>
+      </section>
     </div>
   );
 }

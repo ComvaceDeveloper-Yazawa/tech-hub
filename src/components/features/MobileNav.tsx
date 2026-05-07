@@ -11,7 +11,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { LogoutButton } from '@/components/features/LogoutButton';
 
 interface MobileNavProps {
   isAuthenticated: boolean;
@@ -40,7 +39,7 @@ export function MobileNav({ isAuthenticated }: MobileNavProps) {
           >
             <Link
               href="/articles"
-              className="hover:bg-muted focus-visible:ring-ring rounded px-2 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              className="hover:bg-muted focus-visible:ring-ring rounded px-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2"
               onClick={() => setOpen(false)}
             >
               記事一覧
@@ -49,26 +48,23 @@ export function MobileNav({ isAuthenticated }: MobileNavProps) {
               <>
                 <Link
                   href="/curriculum"
-                  className="hover:bg-muted focus-visible:ring-ring rounded px-2 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  className="hover:bg-muted focus-visible:ring-ring rounded px-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2"
                   onClick={() => setOpen(false)}
                 >
                   カリキュラム
                 </Link>
                 <Link
                   href="/mypage"
-                  className="hover:bg-muted focus-visible:ring-ring rounded px-2 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  className="hover:bg-muted focus-visible:ring-ring rounded px-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2"
                   onClick={() => setOpen(false)}
                 >
                   マイページ
                 </Link>
-                <div className="px-2 py-2">
-                  <LogoutButton />
-                </div>
               </>
             ) : (
               <Link
                 href="/login"
-                className="hover:bg-muted focus-visible:ring-ring rounded px-2 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="hover:bg-muted focus-visible:ring-ring rounded px-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2"
                 onClick={() => setOpen(false)}
               >
                 ログイン
